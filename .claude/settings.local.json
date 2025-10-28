@@ -72,7 +72,10 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit - Configuração do projeto WG\n\n✨ Configurações adicionadas:\n- Estrutura de pastas Supabase (migrations e backup)\n- Credenciais do Supabase no .env.local (protegido pelo .gitignore)\n- .gitignore configurado para proteger arquivos sensíveis\n\n🤖 Agentes Claude Code criados:\n- supabase-mcp-expert: Especialista em operações Supabase\n- doc-research-expert: Especialista em pesquisa de documentação\n\n📦 Projeto WG-CRM:\n- Estrutura completa do CRM\n- Componentes React organizados\n- Integração com Supabase configurada\n\n🔒 Segurança:\n- Credenciais protegidas e não versionadas\n- .env.local no .gitignore\n- Service role keys separadas das anon keys\n\n🤖 Generated with Claude Code\nEOF\n)\")",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(unzip:*)",
+      "Bash(tree:*)",
+      "Bash(ln:*)"
     ],
     "deny": [],
     "ask": []
