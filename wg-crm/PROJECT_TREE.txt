@@ -1,0 +1,267 @@
+CRM GRUPO WG ALMEIDA - ESTRUTURA COMPLETA DO PROJETO
+====================================================
+
+wg-crm/
+│
+├── 📄 Arquivos de Configuração
+│   ├── .env.example              # Template de variáveis de ambiente
+│   ├── .gitignore                # Arquivos ignorados pelo Git
+│   ├── .nvmrc                    # Versão do Node.js
+│   ├── .version                  # Versão do projeto
+│   ├── package.json              # Dependências e scripts
+│   ├── package-lock.json         # Lock de dependências
+│   ├── vite.config.js            # Configuração do Vite
+│   ├── tailwind.config.js        # Configuração do Tailwind CSS
+│   ├── postcss.config.js         # Configuração do PostCSS
+│   └── index.html                # HTML principal
+│
+├── 📚 Documentação
+│   ├── README.md                 # Documentação principal (7.4 KB)
+│   ├── STRUCTURE.md              # Guia de estrutura (9.1 KB)
+│   ├── CONTRIBUTING.md           # Guia de contribuição (8.5 KB)
+│   └── ORGANIZATION_SUMMARY.md   # Resumo da organização
+│
+├── 🎨 Estrutura Antiga (src/)
+│   ├── api/
+│   ├── components/
+│   │   ├── clientes/
+│   │   ├── compras/
+│   │   ├── contratos/
+│   │   ├── dashboard/
+│   │   ├── financeiro/
+│   │   ├── layout/
+│   │   ├── leads/
+│   │   ├── oportunidades/
+│   │   ├── pages/              ⚠️ Duplicação
+│   │   ├── pessoas/
+│   │   ├── propostas/
+│   │   ├── shared/
+│   │   └── ui/
+│   ├── contexts/
+│   ├── hooks/
+│   ├── lib/
+│   └── pages/                  ⚠️ Duplicação
+│
+├── ✨ Nova Estrutura (src-new/)
+│   │
+│   ├── 🎯 features/            # Módulos de Negócio (12 features)
+│   │   │
+│   │   ├── auth/               # Autenticação
+│   │   │   ├── Register.jsx
+│   │   │   └── Onboarding.jsx
+│   │   │
+│   │   ├── clientes/           # Gestão de Clientes
+│   │   │   ├── ClientesTable.jsx
+│   │   │   ├── NovoClienteDialog.jsx
+│   │   │   └── Clientes.jsx
+│   │   │
+│   │   ├── compras/            # Pedidos de Compra
+│   │   │   ├── CompraCard.jsx
+│   │   │   ├── NovoPcDialog.jsx
+│   │   │   └── Compras.jsx
+│   │   │
+│   │   ├── contratos/          # Gestão de Contratos
+│   │   │   ├── ContratoPDF.jsx
+│   │   │   ├── GerenciarModelosContrato.jsx
+│   │   │   ├── NovoContratoDialog.jsx
+│   │   │   └── Contratos.jsx
+│   │   │
+│   │   ├── dashboard/          # Dashboard
+│   │   │   ├── AlertasCard.jsx
+│   │   │   ├── CircularProgress.jsx
+│   │   │   ├── InteractiveStatCard.jsx
+│   │   │   ├── ObrasStatus.jsx
+│   │   │   ├── PipelineChart.jsx
+│   │   │   ├── StatCard.jsx
+│   │   │   └── Dashboard.jsx
+│   │   │
+│   │   ├── ecommerce/          # Loja Online
+│   │   │   ├── CallToAction.jsx
+│   │   │   ├── HeroImage.jsx
+│   │   │   ├── ProductsList.jsx
+│   │   │   ├── ShoppingCart.jsx
+│   │   │   └── WelcomeMessage.jsx
+│   │   │
+│   │   ├── financeiro/         # Gestão Financeira
+│   │   │   ├── Financeiro.jsx
+│   │   │   ├── NovoTituloDialog.jsx
+│   │   │   ├── TitulosList.jsx
+│   │   │   └── Financeiro.jsx (página)
+│   │   │
+│   │   ├── leads/              # Captação de Leads
+│   │   │   ├── LeadCard.jsx
+│   │   │   ├── NovoLeadDialog.jsx
+│   │   │   └── Leads.jsx
+│   │   │
+│   │   ├── obras/              # Gestão de Obras
+│   │   │   ├── Arquitetura.jsx
+│   │   │   ├── Marcenaria.jsx
+│   │   │   ├── Logistica.jsx
+│   │   │   ├── Assistencia.jsx
+│   │   │   └── Arquivos.jsx
+│   │   │
+│   │   ├── oportunidades/      # Pipeline de Vendas
+│   │   │   ├── KanbanBoard.jsx
+│   │   │   ├── KanbanColumn.jsx
+│   │   │   ├── NovaOportunidadeDialog.jsx
+│   │   │   ├── OportunidadeCard.jsx
+│   │   │   └── Oportunidades.jsx
+│   │   │
+│   │   ├── pessoas/            # Gestão de Pessoas
+│   │   │   ├── NovaPessoaDialog.jsx
+│   │   │   └── Pessoas.jsx
+│   │   │
+│   │   └── propostas/          # Propostas Comerciais
+│   │       ├── NovaPropostaDialog.jsx
+│   │       ├── PropostaCard.jsx
+│   │       ├── PropostaPDF.jsx
+│   │       ├── PropostasTable.jsx
+│   │       └── Propostas.jsx
+│   │
+│   ├── 🔧 shared/              # Código Compartilhado
+│   │   │
+│   │   ├── components/
+│   │   │   ├── ui/             # Componentes de UI (21 componentes)
+│   │   │   │   ├── alert-dialog.jsx
+│   │   │   │   ├── avatar.jsx
+│   │   │   │   ├── badge.jsx
+│   │   │   │   ├── button.jsx
+│   │   │   │   ├── card.jsx
+│   │   │   │   ├── command.jsx
+│   │   │   │   ├── dialog.jsx
+│   │   │   │   ├── dropdown-menu.jsx
+│   │   │   │   ├── input.jsx
+│   │   │   │   ├── label.jsx
+│   │   │   │   ├── popover.jsx
+│   │   │   │   ├── select.jsx
+│   │   │   │   ├── table.jsx
+│   │   │   │   ├── tabs.jsx
+│   │   │   │   ├── textarea.jsx
+│   │   │   │   ├── toast.jsx
+│   │   │   │   ├── toaster.jsx
+│   │   │   │   ├── toggle-group.jsx
+│   │   │   │   └── use-toast.js
+│   │   │   │
+│   │   │   └── ClienteProjetoCard.jsx
+│   │   │
+│   │   ├── hooks/              # Hooks Customizados
+│   │   │   ├── useAuth.js
+│   │   │   ├── useBusinessDays.js
+│   │   │   ├── useCart.jsx
+│   │   │   └── useLocalStorage.js
+│   │   │
+│   │   ├── utils/              # Funções Utilitárias
+│   │   │   ├── utils.js
+│   │   │   └── masks.js
+│   │   │
+│   │   └── constants/          # Constantes Centralizadas
+│   │       ├── api.js          # URLs, endpoints, configurações de API
+│   │       ├── routes.js       # Todas as rotas da aplicação
+│   │       └── app.js          # Constantes gerais
+│   │
+│   ├── ⚙️ core/                # Configurações Base
+│   │   │
+│   │   ├── api/                # Camada de API
+│   │   │   └── EcommerceApi.js
+│   │   │
+│   │   ├── contexts/           # React Contexts
+│   │   │   ├── FinancialContext.jsx
+│   │   │   └── SupabaseAuthContext.jsx
+│   │   │
+│   │   ├── layout/             # Componentes de Layout
+│   │   │   ├── CrmLayout.jsx
+│   │   │   ├── Header.jsx
+│   │   │   └── Sidebar.jsx
+│   │   │
+│   │   ├── lib/                # Bibliotecas e Configurações
+│   │   │   └── customSupabaseClient.js
+│   │   │
+│   │   └── config/             # Páginas de Configuração
+│   │       ├── Configuracoes.jsx
+│   │       └── Usuarios.jsx
+│   │
+│   ├── 📄 pages/               # Páginas Principais
+│   │   ├── IntegrationsPage.jsx
+│   │   ├── Login.jsx
+│   │   ├── PortalCliente.jsx
+│   │   ├── ProductDetailPage.jsx
+│   │   ├── PublicCadastroPage.jsx
+│   │   ├── Register.jsx
+│   │   ├── StoreLayout.jsx
+│   │   └── SuccessPage.jsx
+│   │
+│   ├── App.jsx                 # Componente Raiz
+│   ├── main.jsx                # Entry Point
+│   ├── index.css               # Estilos Globais
+│   └── package.json            # Metadata do src
+│
+├── 🔌 plugins/                 # Plugins Vite
+│   ├── visual-editor/
+│   │   ├── edit-mode-script.js
+│   │   ├── vite-plugin-edit-mode.js
+│   │   ├── vite-plugin-react-inline-editor.js
+│   │   └── visual-editor-config.js
+│   └── vite-plugin-iframe-route-restoration.js
+│
+├── 🌐 public/                  # Arquivos Estáticos
+│   ├── .htaccess
+│   └── llms.txt
+│
+└── 🛠️ tools/                   # Scripts e Ferramentas
+    └── generate-llms.js
+
+
+ESTATÍSTICAS
+============
+
+Arquivos:
+  - Total (projeto): 137 arquivos
+  - Código organizado: 95 arquivos
+  - Documentação: 4 arquivos (25 KB)
+
+Features:
+  - Módulos de negócio: 12 features
+  - Componentes principais: 39+
+  - Páginas: 16
+
+Componentes Compartilhados:
+  - UI components: 21 componentes
+  - Hooks customizados: 4 hooks
+  - Utilitários: 2 arquivos
+
+Constantes:
+  - API: 1 arquivo
+  - Rotas: 1 arquivo
+  - App: 1 arquivo
+
+Stack Tecnológico:
+  - React: 18.2.0
+  - Vite: 4.4.5
+  - Tailwind CSS: 3.3.3
+  - Supabase: 2.30.0
+  - Radix UI: Múltiplos pacotes
+  - React Router: 6.16.0
+
+
+BENEFÍCIOS DA NOVA ESTRUTURA
+=============================
+
+✅ Organização clara por domínio de negócio
+✅ Fácil navegação e localização de código
+✅ Sem duplicação entre pages e components
+✅ Constantes centralizadas
+✅ Escalável para crescimento
+✅ Documentação completa
+✅ Padrões bem definidos
+✅ Preparado para trabalho em equipe
+
+
+PRÓXIMOS PASSOS
+===============
+
+1. Atualizar vite.config.js para usar src-new
+2. Testar aplicação (npm run dev)
+3. Validar build (npm run build)
+4. Renomear src-new para src
+5. Atualizar imports para usar alias @/
+

@@ -1,0 +1,89 @@
+# =============================================
+# Credenciais e Arquivos Sensíveis (CRÍTICO!)
+# =============================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.key
+*.pem
+secrets/
+.secrets
+
+# =============================================
+# Node / NPM
+# =============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# =============================================
+# Build / Distribution
+# =============================================
+dist/
+dist-ssr/
+build/
+*.local
+
+# =============================================
+# Editor / IDE
+# =============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# =============================================
+# Testing
+# =============================================
+coverage/
+.nyc_output/
+*.test.js.snap
+
+# =============================================
+# Cache e Temporários
+# =============================================
+.cache/
+.temp/
+.tmp/
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# =============================================
+# Supabase (arquivos gerados automaticamente)
+# =============================================
+# Mantém migrations e backups manuais
+# Ignora apenas arquivos gerados automaticamente
+.supabase/
+
+# =============================================
+# OS Specific
+# =============================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# =============================================
+# Vite
+# =============================================
+.vite/
+*.local
+
+# =============================================
+# TypeScript
+# =============================================
+*.tsbuildinfo
+
+# =============================================
+# Misc
+# =============================================
+.eslintcache
+.prettierignore
