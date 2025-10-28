@@ -1,0 +1,72 @@
+{
+  "project": {
+    "name": "WG CRM",
+    "localPath": "../wg-crm",
+    "platform": "flutterflow",
+    "description": "Sistema CRM desenvolvido inicialmente em FlutterFlow"
+  },
+  "sync": {
+    "autoCommit": true,
+    "autoAnalyze": true,
+    "createBackupBranch": true,
+    "notifyOnChanges": false,
+    "snapshotFormat": "YYYY-MM-DD_HH-mm"
+  },
+  "supabase": {
+    "old": {
+      "projectId": "old-project-id",
+      "url": "https://old-project.supabase.co",
+      "anonKey": "SUPABASE_OLD_ANON_KEY_HERE",
+      "serviceRoleKey": "SUPABASE_OLD_SERVICE_ROLE_KEY_HERE"
+    },
+    "new": {
+      "projectId": "vyxscnevgeubfgfstmtf",
+      "url": "https://vyxscnevgeubfgfstmtf.supabase.co",
+      "anonKey": "YOUR_NEW_ANON_KEY_HERE",
+      "serviceRoleKey": "YOUR_NEW_SERVICE_ROLE_KEY_HERE"
+    }
+  },
+  "paths": {
+    "snapshots": "./snapshots",
+    "reports": "./reports",
+    "temp": "./temp"
+  },
+  "ignore": {
+    "patterns": [
+      "node_modules/**",
+      ".git/**",
+      "dist/**",
+      "build/**",
+      "*.log",
+      ".env*",
+      ".DS_Store",
+      "*.zip"
+    ],
+    "components": [],
+    "pages": []
+  },
+  "diff": {
+    "ignoreWhitespace": true,
+    "ignoreComments": false,
+    "detectRenames": true,
+    "contextLines": 3
+  },
+  "apply": {
+    "createBackup": true,
+    "updateImports": true,
+    "resolveDependencies": true,
+    "dryRunByDefault": false
+  },
+  "migration": {
+    "batchSize": 100,
+    "retryAttempts": 3,
+    "retryDelay": 1000,
+    "validateData": true,
+    "createLogs": true
+  },
+  "notifications": {
+    "enabled": false,
+    "webhook": "",
+    "email": ""
+  }
+}
