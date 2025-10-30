@@ -134,7 +134,9 @@
       "Read(//private/tmp/**)",
       "Bash(flyctl certs show:*)",
       "Bash(nslookup:*)",
-      "mcp__playwright__browser_press_key"
+      "mcp__playwright__browser_press_key",
+      "Bash(produção de Marcenaria em uma única plataforma integrada.)",
+      "Bash(Do orçamento à entrega, controle total do seu negócio.\"\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

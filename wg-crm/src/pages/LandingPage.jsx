@@ -5,7 +5,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { Building2, TrendingUp, Users, Zap, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Building2, HardHat, Hammer, Zap, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -47,23 +47,27 @@ const LandingPage = () => {
   const features = [
     {
       icon: Building2,
-      title: "Gestão Completa",
-      description: "Arquitetura, Engenharia e Marcenaria em um só lugar"
+      title: "Arquitetura Integrada",
+      description: "Projetos arquitetônicos completos, do briefing à entrega, com acompanhamento em tempo real",
+      color: "text-teal-600 bg-teal-50"
     },
     {
-      icon: TrendingUp,
-      title: "Pipeline de Vendas",
-      description: "Acompanhe suas oportunidades do lead ao fechamento"
+      icon: HardHat,
+      title: "Engenharia Sincronizada",
+      description: "Gestão de obras e projetos de engenharia com controle total de prazos e recursos",
+      color: "text-blue-700 bg-blue-50"
     },
     {
-      icon: Users,
-      title: "Equipe Conectada",
-      description: "Colaboração em tempo real entre todos os times"
+      icon: Hammer,
+      title: "Marcenaria Conectada",
+      description: "Desde o orçamento até a produção de móveis planejados, tudo integrado",
+      color: "text-amber-800 bg-amber-50"
     },
     {
       icon: Zap,
-      title: "Produtividade Máxima",
-      description: "Automatize processos e foque no que importa"
+      title: "Tudo em Uma Plataforma",
+      description: "Comercial, financeiro, compras e assistência técnica unificados para os 3 segmentos",
+      color: "text-orange-600 bg-orange-50"
     }
   ];
 
@@ -82,7 +86,7 @@ const LandingPage = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Grupo WG Almeida</h1>
-              <p className="text-sm text-gray-600">easy wg · Gestão Simplificada</p>
+              <p className="text-sm text-gray-600">easy wg · Arquitetura, Engenharia e Marcenaria Integrados</p>
             </div>
           </motion.div>
         </div>
@@ -107,20 +111,20 @@ const LandingPage = () => {
                 className="inline-block"
               >
                 <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-semibold">
-                  🚀 Sistema de Gestão Empresarial
+                  🏗️ Plataforma Integrada para Arquitetura, Engenharia e Marcenaria
                 </span>
               </motion.div>
 
               <h2 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Transforme seu
+                Uma plataforma.
                 <span className="block bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
-                  negócio em resultados
+                  Três segmentos. Infinitas possibilidades.
                 </span>
               </h2>
 
               <p className="text-xl text-gray-600 leading-relaxed">
-                Plataforma completa para gestão de projetos, vendas, equipes e finanças.
-                Tudo que você precisa, em um só lugar.
+                Gerencie projetos de Arquitetura, obras de Engenharia e produção de Marcenaria
+                em uma única plataforma integrada. Do orçamento à entrega, controle total do seu negócio.
               </p>
             </div>
 
@@ -132,11 +136,13 @@ const LandingPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
-                  className="p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                  className="p-5 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all border border-gray-100"
                 >
-                  <feature.icon className="w-8 h-8 text-orange-500 mb-2" />
-                  <h3 className="font-semibold text-gray-900 mb-1">{feature.title}</h3>
-                  <p className="text-sm text-gray-600">{feature.description}</p>
+                  <div className={`w-12 h-12 rounded-lg ${feature.color} flex items-center justify-center mb-3`}>
+                    <feature.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-2 text-base">{feature.title}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{feature.description}</p>
                 </motion.div>
               ))}
             </div>
