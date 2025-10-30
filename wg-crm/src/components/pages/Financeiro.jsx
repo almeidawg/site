@@ -90,10 +90,11 @@ const LancamentosTab = () => {
                 .from('lancamentos')
                 .select(`
                     *,
-                    centro_custo:centro_custo_cliente_id ( nome_razao_social ),
-                    categoria:categoria_id ( nome )
+                    titulo:titulo_id ( tipo, status, descricao ),
+                    centro_custo:centro_custo_cliente_id ( nome ),
+                    categoria:categoria_id ( conta, descricao )
                 `)
-                .order('criado_em', { ascending: false });
+                .order('created_at', { ascending: false });
 
             if (error) {
                 toast({ title: "Erro ao buscar lançamentos", description: error.message, variant: "destructive" });
@@ -140,23 +141,23 @@ const LancamentosTab = () => {
                             <TableBody>
                                 {lancamentos.map(lancamento => (
                                     <TableRow key={lancamento.id}>
-                                        <TableCell className="font-medium">{lancamento.sdp || '-'}</TableCell>
-                                        <TableCell>{new Date(lancamento.criado_em).toLocaleString('pt-BR')}</TableCell>
+                                        <TableCell className="font-medium">{lancamento.titulo?.descricao || '-'}</TableCell>
+                                        <TableCell>{new Date(lancamento.created_at).toLocaleString('pt-BR')}</TableCell>
                                         <TableCell>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${lancamento.tipo === 'receita' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                                                {lancamento.tipo}
+                                            <span className={`px-2 py-1 text-xs rounded-full ${lancamento.titulo?.tipo === 'receita' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                                {lancamento.titulo?.tipo || 'N/A'}
                                             </span>
                                         </TableCell>
-                                        <TableCell>{lancamento.centro_custo?.nome_razao_social || 'N/A'}</TableCell>
-                                        <TableCell>{lancamento.categoria?.nome || 'N/A'}</TableCell>
-                                        <TableCell className="text-right font-semibold">{formatCurrency(lancamento.total)}</TableCell>
+                                        <TableCell>{lancamento.centro_custo?.nome || 'N/A'}</TableCell>
+                                        <TableCell>{lancamento.categoria?.conta || lancamento.categoria?.descricao || 'N/A'}</TableCell>
+                                        <TableCell className="text-right font-semibold">{formatCurrency(lancamento.valor)}</TableCell>
                                         <TableCell>
                                             <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
-                                                lancamento.status === 'Pago' ? 'bg-green-200 text-green-900' :
-                                                lancamento.status === 'Previsto' ? 'bg-yellow-200 text-yellow-900' :
+                                                lancamento.titulo?.status === 'Pago' ? 'bg-green-200 text-green-900' :
+                                                lancamento.titulo?.status === 'Previsto' ? 'bg-yellow-200 text-yellow-900' :
                                                 'bg-gray-200 text-gray-800'
                                             }`}>
-                                                {lancamento.status}
+                                                {lancamento.titulo?.status || 'N/A'}
                                             </span>
                                         </TableCell>
                                     </TableRow>
@@ -177,7 +178,9 @@ const Financeiro = () => {
     
     useEffect(() => {
         const fetchTotals = async () => {
-            const { data, error } = await supabase.from('lancamentos').select('tipo, total');
+            const { data, error } = await supabase
+                .from('lancamentos')
+                .select('valor, titulo:titulo_id ( tipo )');
             if (!error) setLancamentos(data);
             setLoadingLancamentos(false);
         }
@@ -195,8 +198,8 @@ const Financeiro = () => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
     };
 
-    const totalReceitas = lancamentos.filter(l => l.tipo === 'receita').reduce((acc, l) => acc + l.total, 0);
-    const totalDespesas = lancamentos.filter(l => l.tipo === 'despesa').reduce((acc, l) => acc + l.total, 0);
+    const totalReceitas = lancamentos.filter(l => l.titulo?.tipo === 'receita').reduce((acc, l) => acc + (parseFloat(l.valor) || 0), 0);
+    const totalDespesas = lancamentos.filter(l => l.titulo?.tipo === 'despesa').reduce((acc, l) => acc + (parseFloat(l.valor) || 0), 0);
     const saldo = totalReceitas - totalDespesas;
     const lucratividade = totalReceitas > 0 ? (saldo / totalReceitas) * 100 : 0;
 

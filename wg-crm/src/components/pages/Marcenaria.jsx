@@ -16,9 +16,9 @@ const Marcenaria = () => {
         setLoading(true);
 
         const { data: boardData, error: boardError } = await supabase
-            .from('pipelines')
-            .select('id, pipeline_stages(id, nome, pos)')
-            .eq('modulo', 'marcenaria')
+            .from('kanban_boards')
+            .select('id, titulo, kanban_colunas(id, titulo, posicao)')
+            .eq('ambiente', 'marcenaria')
             .single();
 
         if (boardError || !boardData) {
@@ -26,30 +26,29 @@ const Marcenaria = () => {
             setLoading(false);
             return;
         }
-        
+
         setPipelineId(boardData.id);
 
         const { data: cardsData, error: cardsError } = await supabase
             .from('kanban_cards')
             .select('*')
-            .eq('modulo', 'marcenaria')
-            .eq('pipeline_id', boardData.id);
+            .in('coluna_id', boardData.kanban_colunas.map(c => c.id));
 
         if (cardsError) {
             toast({ title: 'Erro ao carregar os projetos', variant: 'destructive' });
             setLoading(false);
             return;
         }
-        setCards(cardsData);
+        setCards(cardsData || []);
 
         const initialColumns = {};
-        boardData.pipeline_stages
-            .sort((a, b) => a.pos - b.pos)
-            .forEach(stage => {
-                initialColumns[stage.id] = {
-                    id: stage.id,
-                    name: stage.nome,
-                    items: cardsData.filter(card => card.stage_id === stage.id).sort((a, b) => a.ordem - b.ordem)
+        (boardData.kanban_colunas || [])
+            .sort((a, b) => a.posicao - b.posicao)
+            .forEach(coluna => {
+                initialColumns[coluna.id] = {
+                    id: coluna.id,
+                    name: coluna.titulo,
+                    items: (cardsData || []).filter(card => card.coluna_id === coluna.id).sort((a, b) => a.posicao - b.posicao)
                 };
             });
         

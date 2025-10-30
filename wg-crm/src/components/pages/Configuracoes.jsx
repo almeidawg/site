@@ -16,6 +16,9 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useBancos } from '../../hooks/useBancos';
+import { useFeriados } from '../../hooks/useFeriados';
+import { useEspecificadores } from '../../hooks/useEspecificadores';
 
 const PlaceholderContent = ({ title, icon: Icon }) => {
     const { toast } = useToast();
@@ -275,35 +278,141 @@ const PricelistManager = () => {
 };
 
 const BancosManager = () => {
+    const { data: bancos, isLoading } = useBancos();
     const { toast } = useToast();
-    const handleNotImplemented = () => {
-        toast({
-            title: '🚧 Em Construção!',
-            description: 'Esta área de configuração está sendo preparada e será liberada em breve.',
-        });
-    };
+
     return (
-         <div className="text-center p-8 bg-white/50 rounded-2xl shadow-inner min-h-[400px] flex flex-col justify-center items-center">
-            <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto flex items-center justify-center">
-                <CreditCard className="text-wg-gray-medium" size={40} />
-            </div>
-            <h3 className="text-xl font-bold mt-4 text-gray-800">
-                Gerenciar Contas e Bancos
-            </h3>
-            <p className="text-wg-gray-medium mt-2 max-w-md mx-auto">
-                Cadastre aqui as contas bancárias da sua empresa. Elas serão usadas como "Conta de Saída" nos lançamentos financeiros.
+        <div>
+            <h3 className="text-xl font-bold mb-4">Bancos Cadastrados</h3>
+            <p className="text-wg-gray-medium mb-6">
+                Bancos disponíveis para seleção nas contas bancárias de clientes e fornecedores.
             </p>
-            <div className="mt-6">
-                <Button
-                    onClick={handleNotImplemented}
-                    className="bg-primary text-white font-semibold py-2 px-6 rounded-lg shadow-lg hover:bg-primary/90 transition-all"
-                >
-                    Aguarde Novidades
-                </Button>
+
+            <div className="space-y-2">
+                {isLoading ? (
+                    <div className="flex justify-center py-8">
+                        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+                    </div>
+                ) : bancos && bancos.length > 0 ? (
+                    bancos.map(banco => (
+                        <div key={banco.id} className="flex items-center justify-between p-4 bg-white/80 rounded-lg border">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                                    <CreditCard className="h-6 w-6 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-900">{banco.nome}</p>
+                                    <div className="flex gap-4 text-sm text-gray-600">
+                                        {banco.codigo && <span>Código: {banco.codigo}</span>}
+                                        {banco.ispb && <span>ISPB: {banco.ispb}</span>}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {banco.ativo ? (
+                                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Ativo</span>
+                                ) : (
+                                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">Inativo</span>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center p-8 bg-white/50 rounded-lg">
+                        <p className="text-gray-600">Nenhum banco cadastrado</p>
+                    </div>
+                )}
             </div>
         </div>
     );
 }
+
+const FeriadosManager = () => {
+    const anoAtual = new Date().getFullYear();
+    const { data: feriados, isLoading } = useFeriados(anoAtual);
+
+    return (
+        <div>
+            <h3 className="text-xl font-bold mb-4">Feriados de {anoAtual}</h3>
+            <p className="text-wg-gray-medium mb-6">
+                Feriados nacionais e regionais usados para cálculo de prazos e agendamentos.
+            </p>
+
+            <div className="space-y-2">
+                {isLoading ? (
+                    <div className="flex justify-center py-8">
+                        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+                    </div>
+                ) : feriados && feriados.length > 0 ? (
+                    feriados.map(feriado => (
+                        <div key={feriado.id} className="flex items-center justify-between p-4 bg-white/80 rounded-lg border">
+                            <div>
+                                <p className="font-semibold text-gray-900">{feriado.nome}</p>
+                                <div className="flex gap-4 text-sm text-gray-600">
+                                    <span>Data: {new Date(feriado.data + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                                    {feriado.tipo && <span className="capitalize">{feriado.tipo}</span>}
+                                    {feriado.uf && <span>UF: {feriado.uf}</span>}
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center p-8 bg-white/50 rounded-lg">
+                        <p className="text-gray-600">Nenhum feriado cadastrado para {anoAtual}</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const EspecificadoresManager = () => {
+    const { data: especificadores, isLoading } = useEspecificadores();
+
+    return (
+        <div>
+            <h3 className="text-xl font-bold mb-4">Especificadores Cadastrados</h3>
+            <p className="text-wg-gray-medium mb-6">
+                Arquitetos e especificadores parceiros que recebem comissão por indicações.
+            </p>
+
+            <div className="space-y-2">
+                {isLoading ? (
+                    <div className="flex justify-center py-8">
+                        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+                    </div>
+                ) : especificadores && especificadores.length > 0 ? (
+                    especificadores.map(espec => (
+                        <div key={espec.id} className="flex items-center justify-between p-4 bg-white/80 rounded-lg border">
+                            <div className="flex-1">
+                                <p className="font-semibold text-gray-900">{espec.nome}</p>
+                                <div className="flex gap-4 text-sm text-gray-600 flex-wrap">
+                                    {espec.email && <span>{espec.email}</span>}
+                                    {espec.telefone && <span>{espec.telefone}</span>}
+                                    {espec.cpf_cnpj && <span>CPF/CNPJ: {espec.cpf_cnpj}</span>}
+                                </div>
+                                {espec.cidade && espec.estado && (
+                                    <p className="text-sm text-gray-600 mt-1">{espec.cidade} - {espec.estado}</p>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {espec.ativo ? (
+                                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Ativo</span>
+                                ) : (
+                                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">Inativo</span>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center p-8 bg-white/50 rounded-lg">
+                        <p className="text-gray-600">Nenhum especificador cadastrado</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 const InformacoesEmpresa = () => {
     const [empresas, setEmpresas] = useLocalStorage('crm_empresas_cadastradas', []);
@@ -393,6 +502,7 @@ const Configuracoes = () => {
             submenus: {
                 'Informações da Empresa': { icon: Building2, component: <InformacoesEmpresa /> },
                 'Criação e Alteração de Contratos': { icon: FileSignature, component: <GerenciarModelosContrato /> },
+                'Feriados': { icon: Star, component: <FeriadosManager /> },
             }
         },
         comercial: {
@@ -400,6 +510,7 @@ const Configuracoes = () => {
             icon: Briefcase,
             submenus: {
                 'Produtos e Serviços': { icon: Package, component: <PricelistManager /> },
+                'Especificadores': { icon: Users, component: <EspecificadoresManager /> },
                 'Procedência de Clientes': { icon: Star, component: <SimpleListManager title="Procedência de Clientes" table="procedencia_clientes" placeholder="Ex: Indicação Arquiteto"/> },
                 'Equipes': { icon: Users, component: <SimpleListManager title="Equipes de Venda" table="equipes_venda" placeholder="Ex: Equipe Alpha"/> },
                 'Motivos de Perdas': { icon: TrendingUp, component: <PlaceholderContent title="Motivos de Perdas" icon={TrendingUp} /> },
