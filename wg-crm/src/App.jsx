@@ -9,6 +9,7 @@ import StoreLayout from '@/pages/StoreLayout';
 import ProductDetailPage from '@/pages/ProductDetailPage';
 import SuccessPage from '@/pages/SuccessPage';
 import Login from '@/pages/Login';
+import LandingPage from '@/pages/LandingPage';
 import Register from '@/pages/Register';
 import PublicCadastroPage from '@/pages/PublicCadastroPage';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -51,10 +52,11 @@ const App = () => {
 
           {!session ? (
             <>
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/cadastro/:type/novo" element={<PublicCadastroPage />} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </>
           ) : (
             <Route path="/*" element={<CrmLayout />} />
