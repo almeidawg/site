@@ -10,19 +10,24 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { Plus, Link as LinkIcon, Loader2 } from 'lucide-react';
 
 const Oportunidades = () => {
-  const [oportunidades, setOportunidades] = useLocalStorage('crm_oportunidades', []);
+  const [oportunidades, setOportunidades] = useState([]);
   const [columns, setColumns] = useState({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [oportunidadeToEdit, setOportunidadeToEdit] = useState(null);
   const [users, setUsers] = useState([]);
-  const [entities] = useLocalStorage('crm_entities', []);
+  const [entities, setEntities] = useState([]);
   const { toast } = useToast();
   const { user } = useAuth();
 
   const fetchUsers = useCallback(async () => {
     const { data, error } = await supabase.from('profiles').select('id, nome');
     if (!error) setUsers(data);
+  }, []);
+
+  const fetchEntities = useCallback(async () => {
+    const { data, error } = await supabase.from('entities').select('*');
+    if (!error) setEntities(data || []);
   }, []);
 
   const fetchColumns = useCallback(async () => {
@@ -40,19 +45,58 @@ const Oportunidades = () => {
     }
 
     const initialColumns = {};
+    const columnIdsMap = {}; // Map column IDs to column keys
+
     boardData.kanban_colunas
       .sort((a, b) => a.posicao - b.posicao)
       .forEach(col => {
-        initialColumns[col.titulo.toLowerCase().replace(/ /g, '_')] = {
+        const key = col.titulo.toLowerCase().replace(/ /g, '_');
+        initialColumns[key] = {
           id: col.id,
           name: col.titulo,
           color: col.color,
           items: []
         };
+        columnIdsMap[col.id] = key;
       });
-    
-    setColumns(initialColumns); // Set columns first
-    distributeOportunidades(initialColumns); // Then distribute
+
+    // Fetch all cards for this board
+    const colunaIds = Object.values(initialColumns).map(col => col.id);
+    if (colunaIds.length > 0) {
+      const { data: cardsData, error: cardsError } = await supabase
+        .from('kanban_cards')
+        .select('*, entity:entities(nome)')
+        .in('coluna_id', colunaIds);
+
+      if (!cardsError && cardsData) {
+        // Convert kanban_cards to oportunidades format
+        const ops = cardsData.map(card => ({
+          id: card.id,
+          titulo: card.titulo,
+          descricao: card.descricao,
+          valor_previsto: parseFloat(card.valor) || 0,
+          entity_id: card.entity_id,
+          cliente_nome: card.entity?.nome || '',
+          responsavel_id: card.responsavel_id,
+          fase: columnIdsMap[card.coluna_id] || 'qualificacao',
+          coluna_id: card.coluna_id,
+          posicao: card.posicao,
+          dados: card.dados,
+          created_at: card.created_at,
+          updated_at: card.updated_at
+        }));
+        setOportunidades(ops);
+
+        // Distribute cards into columns
+        ops.forEach(op => {
+          if (initialColumns[op.fase]) {
+            initialColumns[op.fase].items.push(op);
+          }
+        });
+      }
+    }
+
+    setColumns(initialColumns);
     setLoading(false);
   }, [toast]);
 
@@ -75,12 +119,9 @@ const Oportunidades = () => {
   
   useEffect(() => {
     fetchUsers();
+    fetchEntities();
     fetchColumns();
-  }, [fetchUsers, fetchColumns]);
-
-  useEffect(() => {
-    distributeOportunidades(columns);
-  }, [oportunidades]);
+  }, [fetchUsers, fetchEntities, fetchColumns]);
 
 
   const handleOpenDialog = (oportunidade = null) => {

@@ -1,15 +1,142 @@
-import React from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/customSupabaseClient';
 import PipelineChart from '@/components/dashboard/PipelineChart';
 import ObrasStatus from '@/components/dashboard/ObrasStatus';
-import { Target, FileText, Building, Hammer, HardHat, AlertTriangle, Clock, ShieldAlert, Wrench } from 'lucide-react';
+import { Target, FileText, Building, Hammer, HardHat, AlertTriangle, Clock, ShieldAlert, Wrench, Loader2 } from 'lucide-react';
 import InteractiveStatCard from '@/components/dashboard/InteractiveStatCard';
 import { motion } from 'framer-motion';
 
 const Dashboard = ({ navigate }) => {
-  const [oportunidades] = useLocalStorage('crm_oportunidades', []);
-  const [propostas] = useLocalStorage('crm_propostas', []);
-  const [compras] = useLocalStorage('crm_compras', []);
+  const [oportunidades, setOportunidades] = useState([]);
+  const [propostas, setPropostas] = useState([]);
+  const [compras, setCompras] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [valorArquitetura, setValorArquitetura] = useState(0);
+  const [valorEngenharia, setValorEngenharia] = useState(0);
+  const [valorMarcenaria, setValorMarcenaria] = useState(0);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+
+      try {
+        // Fetch oportunidades from kanban_cards in 'oportunidades' board
+        const { data: opBoard } = await supabase
+          .from('kanban_boards')
+          .select('id')
+          .eq('ambiente', 'oportunidades')
+          .maybeSingle();
+
+        if (opBoard) {
+          // Get all columns for this board
+          const { data: opColunas } = await supabase
+            .from('kanban_colunas')
+            .select('id, titulo')
+            .eq('board_id', opBoard.id);
+
+          const colunaIds = opColunas?.map(c => c.id) || [];
+
+          if (colunaIds.length > 0) {
+            const { data: opCards } = await supabase
+              .from('kanban_cards')
+              .select('*, coluna:kanban_colunas(titulo)')
+              .in('coluna_id', colunaIds);
+
+            setOportunidades(opCards || []);
+          }
+        }
+
+        // Fetch arquitetura cards
+        const { data: arqBoard } = await supabase
+          .from('kanban_boards')
+          .select('id')
+          .eq('ambiente', 'arquitetura')
+          .maybeSingle();
+
+        if (arqBoard) {
+          const { data: arqColunas } = await supabase
+            .from('kanban_colunas')
+            .select('id')
+            .eq('board_id', arqBoard.id);
+
+          const colunaIds = arqColunas?.map(c => c.id) || [];
+
+          if (colunaIds.length > 0) {
+            const { data: arqCards } = await supabase
+              .from('kanban_cards')
+              .select('valor')
+              .in('coluna_id', colunaIds);
+
+            const total = arqCards?.reduce((sum, card) => sum + (parseFloat(card.valor) || 0), 0) || 0;
+            setValorArquitetura(total);
+          }
+        }
+
+        // Fetch marcenaria cards
+        const { data: marBoard } = await supabase
+          .from('kanban_boards')
+          .select('id')
+          .eq('ambiente', 'marcenaria')
+          .maybeSingle();
+
+        if (marBoard) {
+          const { data: marColunas } = await supabase
+            .from('kanban_colunas')
+            .select('id')
+            .eq('board_id', marBoard.id);
+
+          const colunaIds = marColunas?.map(c => c.id) || [];
+
+          if (colunaIds.length > 0) {
+            const { data: marCards } = await supabase
+              .from('kanban_cards')
+              .select('valor')
+              .in('coluna_id', colunaIds);
+
+            const total = marCards?.reduce((sum, card) => sum + (parseFloat(card.valor) || 0), 0) || 0;
+            setValorMarcenaria(total);
+          }
+        }
+
+        // Fetch engenharia cards
+        const { data: engBoard } = await supabase
+          .from('kanban_boards')
+          .select('id')
+          .eq('ambiente', 'engenharia')
+          .maybeSingle();
+
+        if (engBoard) {
+          const { data: engColunas } = await supabase
+            .from('kanban_colunas')
+            .select('id')
+            .eq('board_id', engBoard.id);
+
+          const colunaIds = engColunas?.map(c => c.id) || [];
+
+          if (colunaIds.length > 0) {
+            const { data: engCards } = await supabase
+              .from('kanban_cards')
+              .select('valor')
+              .in('coluna_id', colunaIds);
+
+            const total = engCards?.reduce((sum, card) => sum + (parseFloat(card.valor) || 0), 0) || 0;
+            setValorEngenharia(total);
+          }
+        }
+
+        // For now, set propostas and compras as empty arrays
+        setPropostas([]);
+        setCompras([]);
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const formatCurrency = (value) => {
     if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
@@ -17,25 +144,14 @@ const Dashboard = ({ navigate }) => {
     return `R$ ${value.toFixed(0)}`;
   };
 
-  const valorOportunidades = oportunidades
-    .filter(o => o.status !== 'perdida' && o.status !== 'ganha')
-    .reduce((sum, o) => sum + (o.valor_previsto || 0), 0);
+  // Calculate total from kanban_cards
+  const valorOportunidades = oportunidades.reduce((sum, card) => {
+    // Exclude cards in final columns (Ganha/Perdida)
+    const isActive = card.coluna?.titulo && !['Ganha', 'Perdida'].includes(card.coluna.titulo);
+    return isActive ? sum + (parseFloat(card.valor) || 0) : sum;
+  }, 0);
 
-  const valorPropostas = propostas
-    .filter(p => ['enviada', 'em_negociacao', 'aprovacao_pendente'].includes(p.status))
-    .reduce((sum, p) => sum + (p.valor_total || 0), 0);
-
-  const valorArquitetura = oportunidades
-    .filter(op => op.servicos_contratados?.includes('arquitetura'))
-    .reduce((sum, op) => sum + (op.valor_previsto || 0), 0);
-
-  const valorEngenharia = oportunidades
-    .filter(op => op.servicos_contratados?.includes('engenharia'))
-    .reduce((sum, op) => sum + (op.valor_previsto || 0), 0);
-
-  const valorMarcenaria = oportunidades
-    .filter(op => op.servicos_contratados?.includes('marcenaria'))
-    .reduce((sum, op) => sum + (op.valor_previsto || 0), 0);
+  const valorPropostas = propostas.reduce((sum, p) => sum + (p.valor_total || 0), 0);
 
   const commercialStats = [
     {
@@ -112,6 +228,14 @@ const Dashboard = ({ navigate }) => {
       color: 'text-purple-600 bg-purple-100'
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-wg-blue" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
