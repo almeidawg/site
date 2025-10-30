@@ -44,51 +44,29 @@ const LandingPage = () => {
     }
   };
 
-  const features = [
-    {
-      icon: Building2,
-      title: "Arquitetura Integrada",
-      description: "Projetos arquitetônicos completos, do briefing à entrega, com acompanhamento em tempo real",
-      color: "text-teal-600 bg-teal-50"
-    },
-    {
-      icon: HardHat,
-      title: "Engenharia Sincronizada",
-      description: "Gestão de obras e projetos de engenharia com controle total de prazos e recursos",
-      color: "text-blue-700 bg-blue-50"
-    },
-    {
-      icon: Hammer,
-      title: "Marcenaria Conectada",
-      description: "Desde o orçamento até a produção de móveis planejados, tudo integrado",
-      color: "text-amber-800 bg-amber-50"
-    },
-    {
-      icon: Zap,
-      title: "Tudo em Uma Plataforma",
-      description: "Comercial, financeiro, compras e assistência técnica unificados para os 3 segmentos",
-      color: "text-orange-600 bg-orange-50"
-    }
-  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
-      {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-10 px-6 py-4">
+    <div className="min-h-screen bg-white">
+      {/* Header Minimalista */}
+      <header className="fixed top-0 left-0 right-0 z-10 px-8 py-6 bg-white/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-2"
           >
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xl">WG</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">WG</span>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Grupo WG Almeida</h1>
-              <p className="text-sm text-gray-600">easy wg · Arquitetura, Engenharia e Marcenaria Integrados</p>
-            </div>
+            <span className="text-sm font-medium text-gray-900">Grupo WG Almeida</span>
           </motion.div>
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-xs text-gray-500"
+          >
+            easy wg
+          </motion.span>
         </div>
       </header>
 
@@ -103,64 +81,39 @@ const LandingPage = () => {
             transition={{ duration: 0.6 }}
             className="space-y-8"
           >
-            <div className="space-y-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="inline-block"
-              >
-                <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-semibold">
-                  🏗️ Plataforma Integrada para Arquitetura, Engenharia e Marcenaria
+            <div className="space-y-12">
+              <h1 className="text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
+                <span className="text-gray-900">Arquitetura.</span>
+                <span className="block mt-2 text-gray-900">Engenharia.</span>
+                <span className="block mt-2 bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
+                  Marcenaria.
                 </span>
-              </motion.div>
+              </h1>
 
-              <h2 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Uma plataforma.
-                <span className="block bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
-                  Três segmentos. Infinitas possibilidades.
-                </span>
-              </h2>
-
-              <p className="text-xl text-gray-600 leading-relaxed">
-                Gerencie projetos de Arquitetura, obras de Engenharia e produção de Marcenaria
-                em uma única plataforma integrada. Do orçamento à entrega, controle total do seu negócio.
-              </p>
-            </div>
-
-            {/* Features Grid */}
-            <div className="grid sm:grid-cols-2 gap-4 pt-4">
-              {features.map((feature, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  className="p-5 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all border border-gray-100"
-                >
-                  <div className={`w-12 h-12 rounded-lg ${feature.color} flex items-center justify-center mb-3`}>
-                    <feature.icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-gray-900 mb-2 text-base">{feature.title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{feature.description}</p>
-                </motion.div>
-              ))}
+              <div className="space-y-4">
+                <p className="text-2xl text-gray-600 font-light">
+                  Uma plataforma integrada.
+                </p>
+                <p className="text-xl text-gray-600 leading-relaxed max-w-xl">
+                  Do orçamento à entrega, controle total do seu negócio.
+                </p>
+              </div>
             </div>
 
             {/* Stats */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-              className="flex gap-8 pt-4"
+              transition={{ delay: 0.5 }}
+              className="flex gap-16 pt-8 border-t border-gray-200"
             >
               <div>
-                <div className="text-3xl font-bold text-gray-900">R$ 2.8M+</div>
-                <div className="text-sm text-gray-600">Em oportunidades ativas</div>
+                <div className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent mb-1">R$ 2.8M+</div>
+                <div className="text-sm text-gray-500 uppercase tracking-wider">Oportunidades ativas</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-gray-900">R$ 193K</div>
-                <div className="text-sm text-gray-600">Em projetos em andamento</div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">R$ 193K</div>
+                <div className="text-sm text-gray-500 uppercase tracking-wider">Projetos em andamento</div>
               </div>
             </motion.div>
           </motion.div>
@@ -173,13 +126,10 @@ const LandingPage = () => {
             className="flex justify-center lg:justify-end"
           >
             <div className="w-full max-w-md">
-              <div className="bg-white rounded-2xl shadow-2xl p-8 space-y-6">
-                <div className="text-center space-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                    <span className="text-white font-bold text-2xl">WG</span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900">Bem-vindo de volta</h3>
-                  <p className="text-gray-600">Faça login para acessar sua conta</p>
+              <div className="bg-white rounded-xl border border-gray-200 p-10 space-y-6">
+                <div className="text-center space-y-3">
+                  <h3 className="text-3xl font-bold text-gray-900">Entrar</h3>
+                  <p className="text-gray-400 text-sm">Acesse sua conta</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -219,7 +169,7 @@ const LandingPage = () => {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-semibold text-lg shadow-lg"
+                    className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-semibold text-base shadow-lg shadow-orange-500/30"
                   >
                     {loading ? (
                       <>
@@ -237,35 +187,28 @@ const LandingPage = () => {
                     Esqueceu sua senha?
                   </button>
 
-                  <div className="pt-4 border-t border-gray-200">
-                    <p className="text-sm text-gray-600">
-                      Conta de teste: <span className="font-mono text-orange-600">admin@wg.com</span> / <span className="font-mono text-orange-600">senha123</span>
+                  <div className="pt-4 border-t border-gray-100">
+                    <p className="text-xs text-gray-500">
+                      Teste: <span className="font-mono text-orange-600">admin@wg.com</span> / <span className="font-mono text-orange-600">senha123</span>
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Trust Badges */}
+              {/* Trust Badge */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                className="mt-6 text-center space-y-2"
+                className="mt-6 text-center"
               >
-                <p className="text-xs text-gray-500">🔒 Conexão segura e criptografada</p>
-                <p className="text-xs text-gray-500">Powered by Supabase</p>
+                <p className="text-xs text-gray-300">Conexão segura</p>
               </motion.div>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Background Decoration */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-red-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-orange-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
-      </div>
     </div>
   );
 };
