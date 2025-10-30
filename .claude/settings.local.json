@@ -75,7 +75,8 @@
       "Bash(git commit:*)",
       "Bash(unzip:*)",
       "Bash(tree:*)",
-      "Bash(ln:*)"
+      "Bash(ln:*)",
+      "Bash(git merge claude/analyze-project-011CUcZV2tD2msbL9816pnfG -m \"$(cat <<''EOF''\nfeat: Análise completa + Correções críticas do sistema\n\n🔍 Análise Completa:\n- Documentação de 73KB com análise detalhada do projeto\n- Identificação de problemas críticos no sistema\n- Mapeamento de 18 arquivos SQL necessários\n\n🔴 Problemas Críticos Corrigidos:\n- Criação de tabelas faltando (assistencias, produtos_servicos)\n- Adição de campos faltando (apelido, empresa_id)\n- 6+ queries quebradas identificadas e documentadas\n\n📦 Estrutura SQL Completa:\n- 7 migrations (criar tabelas + corrigir campos)\n- 5 APIs/Functions (oportunidades, kanban, resumo, assistência)\n- 2 Triggers (status, profile)\n- RLS Policies documentadas\n\n📚 Documentação:\n- ANALISE_COMPLETA_PROJETO.md (2.261 linhas)\n- PROBLEMAS_CRITICOS_E_CORRECOES.md (427 linhas)\n- README_ESTRUTURA.md (356 linhas)\n- RLS Policies README (198 linhas)\n\n🎯 Próximos Passos:\n- Executar migrations no Supabase\n- Corrigir queries no frontend\n- Testar funcionalidades críticas\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
