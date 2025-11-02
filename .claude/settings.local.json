@@ -55,7 +55,16 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Configurar Supabase local para desenvolvimento\n\n- Adicionar documentação completa (SUPABASE_LOCAL.md)\n- Configurar Supabase CLI e estrutura de migrations\n- Criar branch dev-supabase-local isolado\n- Ambiente local rodando em http://127.0.0.1:54321\n\nTodas as migrations aplicadas automaticamente.\nAmbiente isolado do Supabase do cliente.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(powershell.exe -Command \"Start-Process ''http://127.0.0.1:54323''\")"
+      "Bash(powershell.exe -Command \"Start-Process ''http://127.0.0.1:54323''\")",
+      "Bash(supabase status:*)",
+      "Bash(supabase stop:*)",
+      "Bash(tree:*)",
+      "Bash(cd:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(cd /Users/valdair/Documents/Projetos/William\\ WG && git add:*)",
+      "Bash(git add -u)"
     ],
     "deny": [],
     "ask": []
