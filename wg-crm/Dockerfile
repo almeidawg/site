@@ -15,6 +15,14 @@ ENV NODE_ENV="production"
 # Throw-away build stage to reduce size of final image
 FROM base as build
 
+# Build arguments for Supabase credentials
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+# Set environment variables from build args
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 # Install packages needed to build node modules
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
@@ -26,7 +34,7 @@ RUN npm ci --include=dev
 # Copy application code
 COPY . .
 
-# Build application
+# Build application with environment variables
 RUN npm run build
 
 # Remove development dependencies
