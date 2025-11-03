@@ -1,287 +1,300 @@
-# 🚀 Edge Functions - Projeto WG CRM
+# 🔥 Edge Functions - WG CRM
 
-Este diretório contém todas as Edge Functions do projeto (Deno runtime).
+## 📊 Status: 20 Funções Ativas
+
+### ✅ O que foi feito:
+- Baixadas **25 Edge Functions** do WG DEV
+- **5 funções migradas para SQL** (Migration 014) → Movidas para `_deprecated/`
+- **20 funções ativas** organizadas e prontas para uso
+
+---
+
+## 📋 Funções Disponíveis por Categoria
+
+### 👥 Gestão de Usuários (3 funções)
+
+| Função | Descrição | Prioridade |
+|--------|-----------|------------|
+| `admin-list-users` | Lista todos os usuários do sistema | ⚠️ Baixa (pode migrar para SQL) |
+| `admin-update-user` | Atualiza dados de usuário | ⚠️ Baixa (pode migrar para SQL) |
+| `create-user` | Cria novo usuário | ⚠️ Baixa (pode migrar para SQL) |
+
+> **📝 Nota**: Essas 3 funções ainda estão como Edge Functions, mas **podem ser migradas para SQL** seguindo o padrão da Migration 014.
+
+---
+
+### 📄 Geração de PDFs (8 funções)
+
+| Função | Descrição | Prioridade |
+|--------|-----------|------------|
+| `proposta-pdf` | Gera PDF de proposta comercial | 🔴 ALTA |
+| `contrato-pdf` | Gera PDF de contrato | 🔴 ALTA |
+| `pedido-compra-pdf` | Gera PDF de pedido de compra | 🔴 ALTA |
+| `ficha-cadastral-pdf` | Gera PDF de ficha cadastral | 🟡 MÉDIA |
+| `assistencia-pdf` | Gera PDF de assistência técnica | 🟡 MÉDIA |
+| `finance-report` | Gera relatório financeiro em PDF | 🟡 MÉDIA |
+| `people-card` | Gera cartão de visita em PDF | 🟢 BAIXA |
+| `pdf-generate` | Gerador genérico de PDF | 🟢 BAIXA |
+
+> **⚠️ Importante**: PDFs **NÃO PODEM ser migrados para SQL**. Requerem bibliotecas JavaScript (jsPDF, PDFKit).
+
+---
+
+### 📊 Google Sheets (4 funções)
+
+| Função | Descrição | Prioridade |
+|--------|-----------|------------|
+| `sheets-export-clientes` | Exporta clientes para Google Sheets | 🟡 MÉDIA |
+| `sheets-export-lancamentos` | Exporta lançamentos financeiros | 🟡 MÉDIA |
+| `sheets-export-produtos` | Exporta produtos | 🟢 BAIXA |
+| `sheets-import-clientes` | Importa clientes do Google Sheets | 🟢 BAIXA |
+
+> **⚠️ Importante**: Google Sheets API **não funciona bem em SQL**. OAuth2, refresh tokens, etc. são complexos demais.
+
+---
+
+### 📧 Notificações (2 funções)
+
+| Função | Descrição | Prioridade |
+|--------|-----------|------------|
+| `notify-email` | Envia notificações por e-mail | 🟡 MÉDIA |
+| `notify-whatsapp` | Envia notificações por WhatsApp | 🟡 MÉDIA |
+
+> **📝 Nota**: `notify-email` poderia usar `pg_notify` + worker, mas Edge Function é mais prático.
+
+---
+
+### 🔍 Scraping e APIs Externas (2 funções)
+
+| Função | Descrição | Prioridade |
+|--------|-----------|------------|
+| `scrape-leroy` | Scraping de produtos da Leroy Merlin | 🔴 ALTA |
+| `get-feriados` | Busca feriados de API externa | 🟢 BAIXA |
+
+> **⚠️ Importante**: Web scraping **NÃO PODE ser SQL**. Requer parsing de HTML com Cheerio.
+
+---
+
+### ⏰ CRON e Processamento (1 função)
+
+| Função | Descrição | Prioridade |
+|--------|-----------|------------|
+| `cron-due-payments` | CRON para cobranças vencidas | 🟡 MÉDIA |
+
+> **📝 Nota**: Poderia ser `pg_cron`, mas `supabase functions schedule` é mais fácil.
+
+---
+
+## 🚀 Como Iniciar
+
+### Opção 1: Script Automático (Recomendado)
+
+```bash
+cd "/Users/valdair/Documents/Projetos/William WG"
+./start-supabase-full.sh
+```
+
+### Opção 2: Manual
+
+```bash
+# 1. Iniciar Supabase
+supabase start
+
+# 2. Servir Edge Functions (exemplos)
+supabase functions serve scrape-leroy --no-verify-jwt
+supabase functions serve proposta-pdf --no-verify-jwt
+supabase functions serve contrato-pdf --no-verify-jwt
+```
+
+### Parar Tudo:
+
+```bash
+./stop-supabase-full.sh
+```
+
+---
 
 ## 📁 Estrutura de Pastas
 
 ```
-functions/
-├── _shared/          ← Código compartilhado entre functions
-│   ├── database.ts   ← Helpers para database
-│   ├── auth.ts       ← Helpers para autenticação
-│   ├── types.ts      ← Types TypeScript compartilhados
-│   └── cors.ts       ← CORS headers
+Supabase/functions/
+├── _deprecated/           # 5 funções migradas para SQL (NÃO USAR)
+│   ├── README.md         # Explicação detalhada
+│   ├── users-invite/
+│   ├── users-reset/
+│   ├── users-role-toggle/
+│   ├── users-create/
+│   └── secure-signup/
 │
-├── integrations/     ← Integrações externas (APIs, webhooks)
-│   ├── webhook-stripe/
-│   └── send-email/
+├── _shared/              # Helpers compartilhados
+│   ├── auth.ts
+│   ├── cors.ts
+│   ├── database.ts
+│   └── types.ts
 │
-├── processing/       ← Processamento pesado/demorado
-│   ├── generate-pdf/
-│   └── resize-images/
+├── api/                  # APIs internas
+│   └── hello-world/
 │
-└── api/              ← APIs customizadas
-    ├── analytics/
-    └── reports/
+├── integrations/         # Integrações externas (futuro)
+├── processing/           # Processamento de dados (futuro)
+│
+├── scrape-leroy/         # 🔴 ALTA prioridade
+├── proposta-pdf/         # 🔴 ALTA prioridade
+├── contrato-pdf/         # 🔴 ALTA prioridade
+├── pedido-compra-pdf/    # 🔴 ALTA prioridade
+│
+├── sheets-export-clientes/    # 🟡 MÉDIA prioridade
+├── sheets-export-lancamentos/ # 🟡 MÉDIA prioridade
+├── notify-email/              # 🟡 MÉDIA prioridade
+├── notify-whatsapp/           # 🟡 MÉDIA prioridade
+├── cron-due-payments/         # 🟡 MÉDIA prioridade
+│
+└── ... (demais funções)
 ```
 
 ---
 
-## 🎯 Quando Usar Edge Functions?
+## 🧪 Exemplos de Uso
 
-### ✅ USE Edge Functions para:
-- Integrações externas (Stripe, SendGrid, APIs terceiras)
-- Webhooks
-- Upload/processamento de arquivos
-- Operações que demoram >60 segundos
-- Lógica complexa em TypeScript/Deno
-- Bibliotecas NPM específicas
+### 1. Scrape Leroy Merlin
 
-### ❌ NÃO USE Edge Functions para:
-- Queries simples (use SQL Functions!)
-- Lógica de negócio básica (use SQL Functions!)
-- Validações (use SQL Functions!)
-- Transformações de dados (use SQL Functions!)
-
-**REGRA DE OURO**: SQL FIRST! 90% das operações devem ser SQL Functions.
-
----
-
-## 🛠️ Desenvolvimento Local
-
-### Iniciar Edge Runtime
 ```bash
-cd /Users/valdair/Documents/Projetos/William\ WG/Supabase
-
-# Iniciar Supabase (inclui Edge Runtime)
-supabase start
-
-# Servir todas as functions (hot reload)
-supabase functions serve
-
-# Ou servir função específica
-supabase functions serve nome-funcao
-```
-
-### Criar Nova Function
-```bash
-cd Supabase
-supabase functions new nome-funcao
-
-# Cria: functions/nome-funcao/index.ts
-```
-
-### Testar Function Local
-```bash
-# Terminal 1: Servir function
-supabase functions serve nome-funcao
-
-# Terminal 2: Testar com curl
-curl -X POST http://localhost:54321/functions/v1/nome-funcao \
-  -H "Authorization: Bearer <ANON_KEY>" \
+curl -X POST "http://localhost:54321/functions/v1/scrape-leroy" \
   -H "Content-Type: application/json" \
-  -d '{"data": "test"}'
+  -d '{"url": "https://www.leroymerlin.com.br/toalheiro-eletrico-aquece-ate-50-c-branco-110v_91252685"}'
 ```
 
-### Ver Logs
-```bash
-# Logs em tempo real
-supabase logs --follow
-
-# Logs específicos de Edge Functions
-supabase logs --filter edge_runtime
-```
-
----
-
-## 🌍 Sistema de URL Dinâmica
-
-Todas as Edge Functions devem usar a função SQL `get_api_url()` para obter a URL base:
-
-```typescript
-import { createClient } from 'jsr:@supabase/supabase-js@2'
-
-Deno.serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-  )
-
-  // Buscar URL dinamicamente (detecta LOCAL ou LIVE)
-  const { data: apiUrl } = await supabase.rpc('get_api_url')
-
-  console.log('API URL:', apiUrl)
-  // LOCAL:  http://127.0.0.1:54321
-  // LIVE:   https://vyxscnevgeubfgfstmtf.supabase.co
-
-  // Usar apiUrl para fazer requisições...
-})
-```
-
-**Benefício**: Deploy sem preocupação! A URL é detectada automaticamente.
-
----
-
-## 🚀 Deploy em Produção
-
-### Via MCP Agent (Recomendado)
-```
-Task → supabase-mcp-expert → "deploy edge function nome-funcao"
-```
-
-### Via CLI (Manual)
-```bash
-supabase functions deploy nome-funcao --project-ref vyxscnevgeubfgfstmtf
-```
-
-### Verificar Deploy
-```bash
-# Listar functions em LIVE
-supabase functions list --project-ref vyxscnevgeubfgfstmtf
-
-# Ver logs em LIVE
-supabase logs --project-ref vyxscnevgeubfgfstmtf --filter edge_runtime
-```
-
----
-
-## 🔐 Secrets e Variáveis de Ambiente
-
-### LOCAL (Desenvolvimento)
-Criar `.env` na raiz do projeto:
-```bash
-SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-STRIPE_SECRET_KEY=sk_test_...
-```
-
-### LIVE (Produção)
-```bash
-# Configurar secrets via CLI
-supabase secrets set STRIPE_SECRET_KEY=sk_live_xxx --project-ref vyxscnevgeubfgfstmtf
-
-# Listar secrets
-supabase secrets list --project-ref vyxscnevgeubfgfstmtf
-
-# Deletar secret
-supabase secrets unset STRIPE_SECRET_KEY --project-ref vyxscnevgeubfgfstmtf
-```
-
-### Acessar em Edge Function
-```typescript
-const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
-if (!stripeKey) {
-  throw new Error('STRIPE_SECRET_KEY não configurado!')
+**Resposta:**
+```json
+{
+  "description": "Toalheiro Elétrico...",
+  "price": 250.50,
+  "image": "https://..."
 }
 ```
 
----
+### 2. Gerar PDF de Proposta
 
-## 📋 Template Básico
-
-```typescript
-// functions/nome-funcao/index.ts
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
-
-serve(async (req) => {
-  // CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  try {
-    // Criar cliente Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Buscar URL dinâmica
-    const { data: apiUrl } = await supabase.rpc('get_api_url')
-
-    // Parse body
-    const body = await req.json()
-
-    // Lógica da função...
-    const result = { success: true, apiUrl, data: body }
-
-    return new Response(
-      JSON.stringify(result),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200
-      }
-    )
-  } catch (error) {
-    console.error('Erro:', error.message)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500
-      }
-    )
-  }
-})
-```
-
----
-
-## 🧪 Testes
-
-### Teste Manual (curl)
 ```bash
-curl -X POST http://localhost:54321/functions/v1/nome-funcao \
-  -H "Authorization: Bearer ${ANON_KEY}" \
+curl -X POST "http://localhost:54321/functions/v1/proposta-pdf" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"test": "data"}'
+  -d '{"proposta_id": "uuid-aqui"}'
 ```
 
-### Teste via Frontend
-```typescript
-const { data, error } = await supabase.functions.invoke('nome-funcao', {
-  body: { test: 'data' }
-})
-```
-
----
-
-## 📚 Documentação Oficial
-
-- [Supabase Edge Functions](https://supabase.com/docs/guides/functions)
-- [Deno Deploy](https://deno.com/deploy/docs)
-- [Deno Standard Library](https://deno.land/std)
-
----
-
-## 🎯 Comandos Rápidos
+### 3. Exportar Clientes para Google Sheets
 
 ```bash
-# Criar function
-supabase functions new <nome>
-
-# Servir local (hot reload)
-supabase functions serve [nome]
-
-# Deploy
-supabase functions deploy <nome> --project-ref vyxscnevgeubfgfstmtf
-
-# Logs
-supabase logs --follow
-
-# Listar functions
-supabase functions list
-
-# Deletar function
-supabase functions delete <nome> --project-ref vyxscnevgeubfgfstmtf
+curl -X POST "http://localhost:54321/functions/v1/sheets-export-clientes" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
 ```
 
 ---
 
-**Última atualização**: 02/11/2025
-**Versão**: 1.0
-**Projeto**: WG CRM
+## 🔧 Desenvolvimento
+
+### Criar Nova Edge Function:
+
+```bash
+supabase functions new nome-da-funcao
+```
+
+### Testar Localmente:
+
+```bash
+supabase functions serve nome-da-funcao --no-verify-jwt
+```
+
+### Deploy para Produção:
+
+```bash
+supabase functions deploy nome-da-funcao --project-ref ahlqzzkxuutwoepirpzr
+```
+
+---
+
+## 📝 Logs
+
+Logs das Edge Functions são salvos em:
+
+```
+/tmp/supabase-function-*.log
+```
+
+Ver logs em tempo real:
+
+```bash
+tail -f /tmp/supabase-function-scrape-leroy.log
+```
+
+---
+
+## ⚙️ Configuração
+
+Edge Functions são configuradas em:
+
+```
+Supabase/supabase/config.toml
+```
+
+Seção relevante:
+
+```toml
+[edge_runtime]
+enabled = true
+policy = "per_worker"  # Hot reload habilitado
+inspector_port = 8083
+deno_version = 2
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Função não inicia:
+
+```bash
+# Ver logs
+cat /tmp/supabase-function-scrape-leroy.log
+
+# Reiniciar
+pkill -f "supabase functions serve scrape-leroy"
+supabase functions serve scrape-leroy --no-verify-jwt
+```
+
+### Erro de porta ocupada:
+
+```bash
+# Verificar processos
+lsof -i :54321
+
+# Matar processo
+pkill -f "supabase functions serve"
+```
+
+### Função não encontrada (404):
+
+```bash
+# Verificar se está servindo
+ps aux | grep "supabase functions serve"
+
+# Verificar se existe
+ls -la Supabase/functions/nome-da-funcao/
+```
+
+---
+
+## 📚 Documentação Relacionada
+
+- **ANALISE_EDGE_FUNCTIONS.md** - Análise completa de todas as 25 funções
+- **Migration 014** - SQL Functions que substituem 5 Edge Functions
+- **start-supabase-full.sh** - Script de inicialização automática
+- **_deprecated/README.md** - Funções descontinuadas
+
+---
+
+**Última atualização:** 03/Nov/2025
+**Total de funções:** 20 ativas + 5 deprecated
+**Status:** ✅ Todas baixadas e organizadas
