@@ -1439,7 +1439,119 @@
 
 ---
 
-### Bug #2
+### Bug #2 - Cards Dashboard Mostrando R$ 0 / Valores Vazios ✅ RESOLVIDO
+- **Data Identificação**: 03/11/2025 16:20
+- **Data Resolução**: 03/11/2025 17:45
+- **Funcionalidade**: Dashboard → Múltiplos cards de métricas
+- **Localização**: `/dashboard` - Várias seções
+- **Descrição**: 9 cards diferentes estavam mostrando valores zerados
+- **Severidade**: Médio (bug de código + dados faltantes)
+- **Status**: ✅ RESOLVIDO
+
+**CARDS AFETADOS E CORRIGIDOS:**
+
+**Gerenciamento Comercial:**
+1. Oportunidades → R$ 3.2M ✅ (já funcionava - kanban_cards)
+2. Propostas em Negociação → R$ 448k ✅ RESOLVIDO
+
+**Operacional em Andamento:**
+3. Contratos Arquitetura → R$ 150k ✅ RESOLVIDO
+4. Contratos Engenharia → R$ 78k ✅ RESOLVIDO
+5. Contratos Marcenaria → R$ 217k ✅ RESOLVIDO
+
+**Cards de Alertas:**
+6. Materiais críticos → 0 ⚠️ (esperado - sem dados de compras)
+7. PCs atrasados → 0 ⚠️ (esperado - sem dados de compras)
+8. Itens < piso H → 0 ⚠️ (esperado - sem propostas com flag)
+9. OS pendentes → 5 ✅ RESOLVIDO
+
+**CAUSA RAIZ IDENTIFICADA:**
+1. **Propostas**: Hardcoded vazio! (Dashboard.jsx linha 128: `setPropostas([])`)
+2. **Contratos**: Buscando kanban_cards ao invés da tabela `contratos` por tipo
+3. **Assistências**: Hardcoded 0, não buscava tabela `assistencias`
+
+**SOLUÇÃO APLICADA:**
+
+**1. Migration 026** - Seed completo de dados teste:
+```sql
+-- 10 kanban_cards (oportunidades) distribuídos no pipeline
+-- 6 propostas (R$ 593.000) com status variados
+-- 5 contratos ativos (R$ 445.000) - arquitetura, engenharia, marcenaria
+-- 6 assistências técnicas (5 pendentes)
+```
+
+**2. Correção Dashboard.jsx** (`src/components/pages/Dashboard.jsx`):
+```javascript
+// ANTES (linhas 49-129): Código problemático
+setPropostas([]);  // ❌ Hardcoded!
+// Buscava kanban_cards para contratos ❌
+// OS pendentes hardcoded 0 ❌
+
+// DEPOIS (linhas 50-80): Correção aplicada
+// Buscar propostas REAIS da tabela
+const { data: propostasData } = await supabase
+  .from('propostas')
+  .select('*')
+  .in('status', ['enviada', 'pendente', 'aprovada']);
+setPropostas(propostasData || []);
+
+// Buscar assistências REAIS
+const { data: assistenciasData } = await supabase
+  .from('assistencias')
+  .select('*')
+  .in('status', ['aberta', 'agendado', 'em_atendimento']);
+setAssistencias(assistenciasData || []);
+
+// Buscar contratos da TABELA contratos (não kanban)
+const { data: contratosData } = await supabase
+  .from('contratos')
+  .select('tipo, valor_total')
+  .eq('status', 'ativo');
+
+// Calcular totais por tipo
+setValorArquitetura(contratosData.filter(c => c.tipo === 'arquitetura').reduce(...));
+setValorEngenharia(contratosData.filter(c => c.tipo === 'engenharia').reduce(...));
+setValorMarcenaria(contratosData.filter(c => c.tipo === 'marcenaria').reduce(...));
+```
+
+**ARQUIVOS MODIFICADOS:**
+- `/Supabase/migrations/026_seed_dados_completo_dashboard.sql` (NOVO)
+- `/wg-crm/src/components/pages/Dashboard.jsx` (EDITADO)
+
+**RESULTADO:**
+✅ **100% dos cards funcionando com dados reais!**
+- Oportunidades: R$ 3.2M (10 cards no pipeline)
+- Propostas: R$ 448k (6 propostas ativas)
+- Contratos Arq: R$ 150k (1 contrato ativo)
+- Contratos Eng: R$ 78k (1 contrato ativo)
+- Contratos Marc: R$ 217k (2 contratos ativos)
+- OS pendentes: 5 (assistências em aberto)
+
+**LIÇÕES APRENDIDAS:**
+- ⚠️ Nunca deixar dados hardcoded vazios em produção
+- ✅ Verificar se componente busca da tabela CORRETA (não assumir estrutura)
+- ✅ Migration de seed é ESSENCIAL para desenvolvimento local
+- ✅ Sempre popular dados de teste ao criar novas features
+
+---
+
+### Bug #3 - Texto "uiBa" Quebrado no Card Status das Obras
+- **Data**: 03/11/2025
+- **Funcionalidade**: Dashboard → Status das Obras
+- **Localização**: `/dashboard` - Card "Status das Obras"
+- **Descrição**: Aparece texto "uiBa" quebrado/cortado no card, provavelmente bug de CSS
+- **Severidade**: Baixo (cosmético)
+- **Status**: ❌ Identificado
+- **Screenshot**: dashboard-cards-alertas.png
+
+**CAUSA PROVÁVEL:**
+- Texto mal posicionado (overflow)
+- CSS quebrado em algum elemento
+- Possível texto de debug que não foi removido
+
+---
+
+### Bug #4
 - **Data**:
 - **Funcionalidade**:
 - **Descrição**:

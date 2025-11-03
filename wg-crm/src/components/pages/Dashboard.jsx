@@ -10,6 +10,7 @@ const Dashboard = ({ navigate }) => {
   const [oportunidades, setOportunidades] = useState([]);
   const [propostas, setPropostas] = useState([]);
   const [compras, setCompras] = useState([]);
+  const [assistencias, setAssistencias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [valorArquitetura, setValorArquitetura] = useState(0);
   const [valorEngenharia, setValorEngenharia] = useState(0);
@@ -46,86 +47,44 @@ const Dashboard = ({ navigate }) => {
           }
         }
 
-        // Fetch arquitetura cards
-        const { data: arqBoard } = await supabase
-          .from('kanban_boards')
-          .select('id')
-          .eq('ambiente', 'arquitetura')
-          .maybeSingle();
+        // Fetch propostas from propostas table
+        const { data: propostasData } = await supabase
+          .from('propostas')
+          .select('*')
+          .in('status', ['enviada', 'pendente', 'aprovada']);
+        setPropostas(propostasData || []);
 
-        if (arqBoard) {
-          const { data: arqColunas } = await supabase
-            .from('kanban_colunas')
-            .select('id')
-            .eq('board_id', arqBoard.id);
+        // Fetch assistências pendentes
+        const { data: assistenciasData } = await supabase
+          .from('assistencias')
+          .select('*')
+          .in('status', ['aberta', 'agendado', 'em_atendimento']);
+        setAssistencias(assistenciasData || []);
 
-          const colunaIds = arqColunas?.map(c => c.id) || [];
+        // Fetch contratos ativos by tipo (instead of kanban_cards)
+        const { data: contratosData } = await supabase
+          .from('contratos')
+          .select('tipo, valor_total')
+          .eq('status', 'ativo');
 
-          if (colunaIds.length > 0) {
-            const { data: arqCards } = await supabase
-              .from('kanban_cards')
-              .select('valor')
-              .in('coluna_id', colunaIds);
+        if (contratosData) {
+          const arqTotal = contratosData
+            .filter(c => c.tipo === 'arquitetura')
+            .reduce((sum, c) => sum + (parseFloat(c.valor_total) || 0), 0);
+          setValorArquitetura(arqTotal);
 
-            const total = arqCards?.reduce((sum, card) => sum + (parseFloat(card.valor) || 0), 0) || 0;
-            setValorArquitetura(total);
-          }
+          const engTotal = contratosData
+            .filter(c => c.tipo === 'engenharia')
+            .reduce((sum, c) => sum + (parseFloat(c.valor_total) || 0), 0);
+          setValorEngenharia(engTotal);
+
+          const marTotal = contratosData
+            .filter(c => c.tipo === 'marcenaria')
+            .reduce((sum, c) => sum + (parseFloat(c.valor_total) || 0), 0);
+          setValorMarcenaria(marTotal);
         }
 
-        // Fetch marcenaria cards
-        const { data: marBoard } = await supabase
-          .from('kanban_boards')
-          .select('id')
-          .eq('ambiente', 'marcenaria')
-          .maybeSingle();
-
-        if (marBoard) {
-          const { data: marColunas } = await supabase
-            .from('kanban_colunas')
-            .select('id')
-            .eq('board_id', marBoard.id);
-
-          const colunaIds = marColunas?.map(c => c.id) || [];
-
-          if (colunaIds.length > 0) {
-            const { data: marCards } = await supabase
-              .from('kanban_cards')
-              .select('valor')
-              .in('coluna_id', colunaIds);
-
-            const total = marCards?.reduce((sum, card) => sum + (parseFloat(card.valor) || 0), 0) || 0;
-            setValorMarcenaria(total);
-          }
-        }
-
-        // Fetch engenharia cards
-        const { data: engBoard } = await supabase
-          .from('kanban_boards')
-          .select('id')
-          .eq('ambiente', 'engenharia')
-          .maybeSingle();
-
-        if (engBoard) {
-          const { data: engColunas } = await supabase
-            .from('kanban_colunas')
-            .select('id')
-            .eq('board_id', engBoard.id);
-
-          const colunaIds = engColunas?.map(c => c.id) || [];
-
-          if (colunaIds.length > 0) {
-            const { data: engCards } = await supabase
-              .from('kanban_cards')
-              .select('valor')
-              .in('coluna_id', colunaIds);
-
-            const total = engCards?.reduce((sum, card) => sum + (parseFloat(card.valor) || 0), 0) || 0;
-            setValorEngenharia(total);
-          }
-        }
-
-        // For now, set propostas and compras as empty arrays
-        setPropostas([]);
+        // For now, set compras as empty array
         setCompras([]);
 
       } catch (error) {
@@ -224,7 +183,7 @@ const Dashboard = ({ navigate }) => {
       label:"OS pendentes",
       icon: Wrench,
       link:"/assistencia?status=aberta",
-      count: 0,
+      count: assistencias.length,
       color: 'text-purple-600 bg-purple-100'
     }
   ];
