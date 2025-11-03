@@ -93,3 +93,4 @@ Desktop.ini
 # =============================================
 .eslintcache
 .prettierignore
+.playwright-mcp/
