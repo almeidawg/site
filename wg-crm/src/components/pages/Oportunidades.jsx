@@ -88,11 +88,16 @@ const Oportunidades = () => {
         }));
         setOportunidades(ops);
 
-        // Distribute cards into columns
+        // Distribute cards into columns and sort by position
         ops.forEach(op => {
           if (initialColumns[op.fase]) {
             initialColumns[op.fase].items.push(op);
           }
+        });
+
+        // Sort items within each column by position
+        Object.keys(initialColumns).forEach(key => {
+          initialColumns[key].items.sort((a, b) => a.posicao - b.posicao);
         });
       }
     }
@@ -136,49 +141,75 @@ const Oportunidades = () => {
 
     if (source.droppableId !== destination.droppableId) {
       // Moving to a different column
-      const updatedItem = oportunidades.find(op => op.id === draggableId);
-      if (!updatedItem) return;
+      const sourceColumn = columns[source.droppableId];
+      const destColumn = columns[destination.droppableId];
+
+      if (!sourceColumn || !destColumn) return;
+
+      // Find the item being moved
+      const movedItem = sourceColumn.items.find(item => item.id === draggableId);
+      if (!movedItem) return;
 
       const newFase = destination.droppableId;
-      const newColunaId = columns[newFase]?.id;
+      const newColunaId = destColumn.id;
 
-      if (!newColunaId) return;
-
-      updatedItem.fase = newFase;
-      updatedItem.coluna_id = newColunaId;
-
-      if (newFase === 'ganha') {
-        updatedItem.status = 'ganha';
-      } else if (newFase === 'perdida') {
-        updatedItem.status = 'perdida';
-      } else {
-        updatedItem.status = 'ativa';
-      }
+      // Create updated item with new column info
+      // Usar múltiplo de 10 para manter consistência com o banco
+      const novaPosicao = (destination.index + 1) * 10;
+      const updatedItem = {
+        ...movedItem,
+        fase: newFase,
+        coluna_id: newColunaId,
+        posicao: novaPosicao,
+        status: newFase === 'ganha' ? 'ganha' : newFase === 'perdida' ? 'perdida' : 'ativa'
+      };
 
       // Update local state immediately (optimistic update)
+      // 1. Remove from source column
+      const sourceItems = [...sourceColumn.items];
+      sourceItems.splice(source.index, 1);
+
+      // 2. Add to destination column
+      const destItems = [...destColumn.items];
+      destItems.splice(destination.index, 0, updatedItem);
+
+      // 3. Update columns state
+      const newColumns = {
+        ...columns,
+        [source.droppableId]: { ...sourceColumn, items: sourceItems },
+        [destination.droppableId]: { ...destColumn, items: destItems }
+      };
+      setColumns(newColumns);
+
+      // 4. Update oportunidades array
       setOportunidades(prev => prev.map(op => op.id === draggableId ? updatedItem : op));
 
       // Save to database
+      // IMPORTANTE: O trigger espera posições como múltiplos de 10
+      // E precisa ser diferente da posição antiga para não ser sobrescrito
       const { error } = await supabase
         .from('kanban_cards')
         .update({
           coluna_id: newColunaId,
-          posicao: destination.index
+          posicao: novaPosicao, // Já definida acima como (destination.index + 1) * 10
+          updated_at: new Date().toISOString()
         })
         .eq('id', draggableId);
 
       if (error) {
+        console.error('Error moving card:', error);
         toast({
           title: "Erro ao mover card",
           description: error.message,
           variant: "destructive"
         });
-        // Revert on error
+        // Revert on error - reload from database
         fetchColumns();
       } else {
+        // Show success toast ONLY after successful save
         toast({
           title: "Oportunidade Movida!",
-          description: `Movida para a fase "${columns[newFase]?.name || newFase}".`,
+          description: `Movida para a fase "${destColumn.name || newFase}".`,
         });
       }
 
@@ -189,17 +220,37 @@ const Oportunidades = () => {
       const [removed] = copiedItems.splice(source.index, 1);
       copiedItems.splice(destination.index, 0, removed);
 
-      const newColumns = {...columns, [source.droppableId]: { ...column, items: copiedItems }};
+      // Update positions for all affected items
+      const updatedItems = copiedItems.map((item, index) => ({
+        ...item,
+        posicao: index
+      }));
+
+      const newColumns = {
+        ...columns,
+        [source.droppableId]: { ...column, items: updatedItems }
+      };
       setColumns(newColumns);
 
       // Save new position to database
+      // IMPORTANTE: Converter para múltiplo de 10 para compatibilidade com o trigger
+      const novaPosicao = (destination.index + 1) * 10;
+
       const { error } = await supabase
         .from('kanban_cards')
-        .update({ posicao: destination.index })
+        .update({
+          posicao: novaPosicao,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', draggableId);
 
       if (error) {
         console.error('Error updating card position:', error);
+        toast({
+          title: "Erro ao reordenar card",
+          description: error.message,
+          variant: "destructive"
+        });
         // Revert on error
         fetchColumns();
       }
