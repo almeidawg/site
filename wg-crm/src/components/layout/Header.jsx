@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
 import ShoppingCart from '@/components/ShoppingCart';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth as useCustomAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,16 +18,20 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 
-const Header = ({ user, toggleSidebar, isStore = false }) => {
+const Header = ({ user: propUser, toggleSidebar, isStore = false }) => {
   const { cartItems } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const { logout } = useAuth();
+  const { logout: customLogout } = useCustomAuth();
+  const { user: authUser, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  // Usar authUser (do Supabase) se disponível, senão usar propUser
+  const user = authUser || propUser;
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
   };
 
   return (
@@ -83,19 +88,32 @@ const Header = ({ user, toggleSidebar, isStore = false }) => {
               <DropdownMenuTrigger asChild>
                 <div className={`flex items-center gap-3 pl-4 cursor-pointer ${isStore ? 'border-l border-white/20' : 'border-l border-purple-200/50'}`}>
                   <div className="text-right">
-                    <p className="font-semibold text-sm">{user?.nome || 'Usuário'}</p>
-                    <p className={`text-xs capitalize ${isStore ? 'text-gray-300' : 'text-muted-foreground'}`}>{user?.perfil || 'Perfil'}</p>
+                    <p className="font-semibold text-sm">
+                      {user?.user_metadata?.full_name || user?.email?.split('@')[0] || user?.nome || 'Usuário'}
+                    </p>
+                    <p className={`text-xs ${isStore ? 'text-gray-300' : 'text-muted-foreground'}`}>
+                      {user?.email || user?.perfil || 'Email'}
+                    </p>
                   </div>
                   <Avatar>
-                    <AvatarImage src={user?.avatar} alt={user?.nome} />
+                    <AvatarImage src={user?.user_metadata?.avatar_url || user?.avatar} alt={user?.email} />
                     <AvatarFallback className="gradient-primary text-white font-semibold">
-                      {user?.nome?.charAt(0) || 'U'}
+                      {(user?.user_metadata?.full_name || user?.email || user?.nome || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário'}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email || 'email@exemplo.com'}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/usuarios')}>
                   Perfil
