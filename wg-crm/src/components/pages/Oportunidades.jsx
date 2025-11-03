@@ -129,16 +129,22 @@ const Oportunidades = () => {
     setDialogOpen(true);
   };
 
-  const onDragEnd = result => {
+  const onDragEnd = async (result) => {
     if (!result.destination) return;
     const { source, destination, draggableId } = result;
 
     if (source.droppableId !== destination.droppableId) {
+      // Moving to a different column
       const updatedItem = oportunidades.find(op => op.id === draggableId);
-      if(!updatedItem) return;
-      
+      if (!updatedItem) return;
+
       const newFase = destination.droppableId;
+      const newColunaId = columns[newFase]?.id;
+
+      if (!newColunaId) return;
+
       updatedItem.fase = newFase;
+      updatedItem.coluna_id = newColunaId;
 
       if (newFase === 'ganha') {
         updatedItem.status = 'ganha';
@@ -147,13 +153,33 @@ const Oportunidades = () => {
       } else {
         updatedItem.status = 'ativa';
       }
-      
+
+      // Update local state immediately (optimistic update)
       setOportunidades(prev => prev.map(op => op.id === draggableId ? updatedItem : op));
-      
-      toast({
-        title: "Oportunidade Movida!",
-        description: `Movida para a fase "${newFase}".`,
-      });
+
+      // Save to database
+      const { error } = await supabase
+        .from('kanban_cards')
+        .update({
+          coluna_id: newColunaId,
+          posicao: destination.index
+        })
+        .eq('id', draggableId);
+
+      if (error) {
+        toast({
+          title: "Erro ao mover card",
+          description: error.message,
+          variant: "destructive"
+        });
+        // Revert on error
+        fetchColumns();
+      } else {
+        toast({
+          title: "Oportunidade Movida!",
+          description: `Movida para a fase "${columns[newFase]?.name || newFase}".`,
+        });
+      }
 
     } else {
       // Reordering within the same column
@@ -161,11 +187,21 @@ const Oportunidades = () => {
       const copiedItems = [...column.items];
       const [removed] = copiedItems.splice(source.index, 1);
       copiedItems.splice(destination.index, 0, removed);
-      
+
       const newColumns = {...columns, [source.droppableId]: { ...column, items: copiedItems }};
       setColumns(newColumns);
-      
-      // Update the main 'oportunidades' array to persist order if needed, though not strictly necessary for visual reordering.
+
+      // Save new position to database
+      const { error } = await supabase
+        .from('kanban_cards')
+        .update({ posicao: destination.index })
+        .eq('id', draggableId);
+
+      if (error) {
+        console.error('Error updating card position:', error);
+        // Revert on error
+        fetchColumns();
+      }
     }
   };
 
