@@ -64,6 +64,7 @@ coverage/
 # Mantém migrations e backups manuais
 # Ignora apenas arquivos gerados automaticamente
 .supabase/
+Supabase/supabase/.env
 
 # =============================================
 # OS Specific
@@ -93,4 +94,10 @@ Desktop.ini
 # =============================================
 .eslintcache
 .prettierignore
+.playwright-mcp/
+
+# Edge Functions logs
+/tmp/supabase-function-*.log
+start-supabase-full.sh
+*.log
 .playwright-mcp/
