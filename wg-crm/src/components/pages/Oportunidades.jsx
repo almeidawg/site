@@ -148,7 +148,10 @@ const Oportunidades = () => {
 
       // Find the item being moved
       const movedItem = sourceColumn.items.find(item => item.id === draggableId);
-      if (!movedItem) return;
+      if (!movedItem) {
+        console.error('❌ Item não encontrado:', draggableId);
+        return;
+      }
 
       const newFase = destination.droppableId;
       const newColunaId = destColumn.id;
@@ -163,6 +166,16 @@ const Oportunidades = () => {
         posicao: novaPosicao,
         status: newFase === 'ganha' ? 'ganha' : newFase === 'perdida' ? 'perdida' : 'ativa'
       };
+
+      // 🔍 DEBUG: Log antes do UPDATE
+      console.log('🎯 Movendo card:', {
+        id: draggableId,
+        de_coluna: movedItem.coluna_id,
+        para_coluna: newColunaId,
+        nova_posicao: novaPosicao,
+        responsavel_id: movedItem.responsavel_id,
+        user_atual: user?.id
+      });
 
       // Update local state immediately (optimistic update)
       // 1. Remove from source column
@@ -187,17 +200,25 @@ const Oportunidades = () => {
       // Save to database
       // IMPORTANTE: O trigger espera posições como múltiplos de 10
       // E precisa ser diferente da posição antiga para não ser sobrescrito
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('kanban_cards')
         .update({
           coluna_id: newColunaId,
           posicao: novaPosicao, // Já definida acima como (destination.index + 1) * 10
           updated_at: new Date().toISOString()
         })
-        .eq('id', draggableId);
+        .eq('id', draggableId)
+        .select(); // Adicionar .select() para retornar dados
+
+      // 🔍 DEBUG: Log após UPDATE
+      console.log('📝 Resultado do UPDATE:', {
+        data: data,
+        error: error,
+        data_length: data?.length
+      });
 
       if (error) {
-        console.error('Error moving card:', error);
+        console.error('❌ Error moving card:', error);
         toast({
           title: "Erro ao mover card",
           description: error.message,
@@ -205,8 +226,19 @@ const Oportunidades = () => {
         });
         // Revert on error - reload from database
         fetchColumns();
+      } else if (!data || data.length === 0) {
+        // 🚨 UPDATE não encontrou o registro ou foi bloqueado por RLS
+        console.error('⚠️ UPDATE não retornou dados - possível bloqueio RLS');
+        toast({
+          title: "Erro de Permissão",
+          description: "Você não tem permissão para mover este card. Apenas o responsável ou gestores podem movê-lo.",
+          variant: "destructive"
+        });
+        // Revert - reload from database
+        fetchColumns();
       } else {
         // Show success toast ONLY after successful save
+        console.log('✅ Card movido com sucesso!');
         toast({
           title: "Oportunidade Movida!",
           description: `Movida para a fase "${destColumn.name || newFase}".`,
@@ -236,16 +268,33 @@ const Oportunidades = () => {
       // IMPORTANTE: Converter para múltiplo de 10 para compatibilidade com o trigger
       const novaPosicao = (destination.index + 1) * 10;
 
-      const { error } = await supabase
+      // 🔍 DEBUG: Log reordenação
+      console.log('🔄 Reordenando card:', {
+        id: draggableId,
+        coluna: source.droppableId,
+        de_posicao: source.index,
+        para_posicao: destination.index,
+        nova_posicao_db: novaPosicao
+      });
+
+      const { data, error } = await supabase
         .from('kanban_cards')
         .update({
           posicao: novaPosicao,
           updated_at: new Date().toISOString()
         })
-        .eq('id', draggableId);
+        .eq('id', draggableId)
+        .select(); // Adicionar .select() para verificar resultado
+
+      // 🔍 DEBUG: Log resultado
+      console.log('📝 Resultado reordenação:', {
+        data: data,
+        error: error,
+        data_length: data?.length
+      });
 
       if (error) {
-        console.error('Error updating card position:', error);
+        console.error('❌ Error updating card position:', error);
         toast({
           title: "Erro ao reordenar card",
           description: error.message,
@@ -253,6 +302,16 @@ const Oportunidades = () => {
         });
         // Revert on error
         fetchColumns();
+      } else if (!data || data.length === 0) {
+        console.error('⚠️ Reordenação bloqueada por RLS');
+        toast({
+          title: "Erro de Permissão",
+          description: "Você não tem permissão para reordenar este card.",
+          variant: "destructive"
+        });
+        fetchColumns();
+      } else {
+        console.log('✅ Card reordenado com sucesso!');
       }
     }
   };
