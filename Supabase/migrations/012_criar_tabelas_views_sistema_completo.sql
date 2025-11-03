@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS public.contratos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   numero TEXT UNIQUE NOT NULL,
   cliente_id UUID REFERENCES entities(id) ON DELETE CASCADE NOT NULL,
-  proposta_id UUID REFERENCES propostas(id) ON DELETE SET NULL,
+  proposta_id UUID, -- FK será adicionada depois que propostas for criada
   titulo TEXT NOT NULL,
   descricao TEXT,
   valor_total NUMERIC(15, 2) NOT NULL DEFAULT 0,
@@ -116,6 +116,10 @@ CREATE TRIGGER propostas_updated_at
 
 -- Comentário
 COMMENT ON TABLE propostas IS 'Propostas comerciais enviadas para clientes';
+
+-- Adicionar foreign key para contratos agora que propostas existe
+ALTER TABLE contratos ADD CONSTRAINT contratos_proposta_id_fkey
+  FOREIGN KEY (proposta_id) REFERENCES propostas(id) ON DELETE SET NULL;
 
 
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

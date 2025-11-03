@@ -1,0 +1,176 @@
+-- =============================================
+-- Migration 016: Função SQL para Scrape Leroy Merlin
+-- =============================================
+-- Substitui Edge Function por SQL Function
+-- Usa extensão http para fazer requisições
+-- =============================================
+
+-- Habilitar extensão http
+CREATE EXTENSION IF NOT EXISTS http;
+
+-- Função para fazer scrape da Leroy Merlin
+DROP FUNCTION IF EXISTS public.scrape_leroy_merlin(TEXT);
+
+CREATE OR REPLACE FUNCTION public.scrape_leroy_merlin(produto_url TEXT)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  response_html TEXT;
+  json_ld_content TEXT;
+  product_data JSONB;
+  product_info JSONB;
+  description TEXT;
+  price NUMERIC;
+  image TEXT;
+  result JSON;
+BEGIN
+  -- Validar URL
+  IF produto_url IS NULL OR produto_url = '' THEN
+    RETURN json_build_object('error', 'URL inválida fornecida.');
+  END IF;
+
+  -- Fazer requisição HTTP GET
+  BEGIN
+    SELECT content::TEXT INTO response_html
+    FROM http((
+      'GET',
+      produto_url,
+      ARRAY[
+        http_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+      ],
+      NULL,
+      NULL
+    )::http_request);
+  EXCEPTION WHEN OTHERS THEN
+    RETURN json_build_object('error', 'Falha ao buscar a página: ' || SQLERRM);
+  END;
+
+  -- Verificar se obteve resposta
+  IF response_html IS NULL OR response_html = '' THEN
+    RETURN json_build_object('error', 'Resposta vazia do servidor');
+  END IF;
+
+  -- Extrair TODOS os blocos JSON-LD do HTML
+  -- Buscar pelo que contém informações de Product
+  BEGIN
+    WITH json_ld_blocks AS (
+      SELECT
+        TRIM(
+          regexp_replace(
+            regexp_replace(match[1], '[\n\r\t]+', ' ', 'g'),
+            '\s+', ' ', 'g'
+          )
+        ) AS json_content
+      FROM regexp_matches(
+        response_html,
+        '<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>',
+        'sig'
+      ) AS match
+    ),
+    valid_json_blocks AS (
+      SELECT
+        json_content,
+        json_content::JSONB AS json_data
+      FROM json_ld_blocks
+      WHERE json_content IS NOT NULL
+        AND LENGTH(json_content) > 10
+    )
+    SELECT json_data INTO product_data
+    FROM valid_json_blocks
+    WHERE
+      -- Buscar o JSON que tem @type = Product ou @graph contendo Product
+      (json_data->>'@type' = 'Product')
+      OR
+      (json_data ? '@graph' AND
+       EXISTS (
+         SELECT 1
+         FROM jsonb_array_elements(json_data->'@graph') elem
+         WHERE elem->>'@type' = 'Product'
+       ))
+    LIMIT 1;
+
+  EXCEPTION WHEN OTHERS THEN
+    RETURN json_build_object('error', 'Erro ao extrair/parsear JSON-LD: ' || SQLERRM);
+  END;
+
+  -- Verificar se encontrou JSON-LD com Product
+  IF product_data IS NULL THEN
+    RETURN json_build_object('error', 'Não foi possível encontrar dados do produto na página.');
+  END IF;
+
+  -- Extrair informações do produto
+  -- Verificar se tem @graph ou se é diretamente um Product
+  IF product_data ? '@graph' THEN
+    product_info := (
+      SELECT value
+      FROM jsonb_array_elements(product_data->'@graph')
+      WHERE value->>'@type' = 'Product'
+      LIMIT 1
+    );
+  ELSIF product_data->>'@type' = 'Product' THEN
+    product_info := product_data;
+  ELSE
+    RETURN json_build_object('error', 'Dados do produto não encontrados no JSON-LD.');
+  END IF;
+
+  -- Verificar se encontrou produto
+  IF product_info IS NULL THEN
+    RETURN json_build_object('error', 'Dados do produto não encontrados no JSON-LD.');
+  END IF;
+
+  -- Extrair campos
+  description := COALESCE(product_info->>'name', 'Descrição não encontrada');
+
+  -- Extrair imagem (pode ser array ou string)
+  IF jsonb_typeof(product_info->'image') = 'array' THEN
+    image := product_info->'image'->>0;
+  ELSE
+    image := product_info->>'image';
+  END IF;
+
+  -- Extrair preço (pode estar em offers.price ou offers.lowPrice)
+  price := 0;
+  IF product_info ? 'offers' THEN
+    DECLARE
+      offer JSONB;
+      price_str TEXT;
+    BEGIN
+      IF jsonb_typeof(product_info->'offers') = 'array' THEN
+        offer := product_info->'offers'->0;
+      ELSE
+        offer := product_info->'offers';
+      END IF;
+
+      price_str := COALESCE(offer->>'price', offer->>'lowPrice');
+      IF price_str IS NOT NULL THEN
+        -- Remover vírgula e converter para numeric
+        price := REPLACE(price_str, ',', '.')::NUMERIC;
+      END IF;
+    END;
+  END IF;
+
+  -- Construir resultado
+  result := json_build_object(
+    'description', description,
+    'price', price,
+    'image', image
+  );
+
+  RETURN result;
+
+EXCEPTION WHEN OTHERS THEN
+  RETURN json_build_object('error', SQLERRM);
+END;
+$$;
+
+-- Comentário
+COMMENT ON FUNCTION public.scrape_leroy_merlin(TEXT) IS
+'Faz scraping de produtos da Leroy Merlin usando extensão http do PostgreSQL.
+Extrai: nome, preço e imagem do produto a partir da URL.
+Substitui Edge Function por performance e simplicidade.';
+
+-- Testar função (exemplo)
+-- SELECT scrape_leroy_merlin('https://www.leroymerlin.com.br/toalheiro-eletrico-aquece-ate-50-c-branco-110v_91252685');
