@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { DragDropContext } from '@hello-pangea/dnd';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import KanbanBoard from '@/components/oportunidades/KanbanBoard';
+import KanbanColumn from '@/components/oportunidades/KanbanColumn';
 import NovaOportunidadeDialog from '@/components/oportunidades/NovaOportunidadeDialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -268,7 +269,21 @@ const Oportunidades = () => {
         </div>
       </div>
       <div className="flex-grow overflow-hidden">
-        <KanbanBoard columns={columns} onDragEnd={onDragEnd} onRenameColumn={handleRenameColumn} onDeleteColumn={() => handleNotImplemented('Excluir')} onUpdateOportunidade={updateOportunidade} onEditOportunidade={handleOpenDialog} />
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="flex space-x-4 overflow-x-auto p-2 h-full">
+            {Object.entries(columns).map(([columnId, column]) => (
+              <KanbanColumn
+                key={columnId}
+                column={column}
+                columnId={columnId}
+                onRenameColumn={handleRenameColumn}
+                onDeleteColumn={() => handleNotImplemented('Excluir')}
+                onUpdateOportunidade={updateOportunidade}
+                onEditOportunidade={handleOpenDialog}
+              />
+            ))}
+          </div>
+        </DragDropContext>
       </div>
       <NovaOportunidadeDialog open={dialogOpen} onOpenChange={setDialogOpen} setOportunidades={setOportunidades} oportunidadeToEdit={oportunidadeToEdit} users={users} clientes={entities.filter(e => e.tipo === 'cliente')} />
     </div>;

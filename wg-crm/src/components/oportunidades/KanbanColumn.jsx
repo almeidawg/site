@@ -84,18 +84,17 @@ const KanbanColumn = ({ column, columnId, onRenameColumn, onDeleteColumn, onUpda
               className={`p-2 pt-0 overflow-y-auto flex-grow transition-colors duration-200 ${snapshot.isDraggingOver ? 'bg-gray-200/50' : 'bg-transparent'}`}
             >
               {column.items.map((item, index) => (
-                <Draggable key={item.id} draggableId={item.id} index={index}>
+                <Draggable key={item.id} draggableId={String(item.id)} index={index}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
-                      style={{ ...provided.draggableProps.style }}
-                      className="mb-2"
+                      className={`mb-2 ${snapshot.isDragging ? 'opacity-50' : ''}`}
                     >
-                      <OportunidadeCard 
-                        data={item} 
-                        isDragging={snapshot.isDragging} 
+                      <OportunidadeCard
+                        data={item}
+                        isDragging={snapshot.isDragging}
                         onUpdateOportunidade={onUpdateOportunidade}
                         onEdit={() => onEditOportunidade(item)}
                       />
