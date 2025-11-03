@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { DragDropContext } from '@hello-pangea/dnd';
+import { DragDropContext } from 'react-beautiful-dnd';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import KanbanColumn from '@/components/oportunidades/KanbanColumn';
 import NovaOportunidadeDialog from '@/components/oportunidades/NovaOportunidadeDialog';
