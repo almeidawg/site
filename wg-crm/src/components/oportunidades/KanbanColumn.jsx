@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Draggable, Droppable } from 'react-beautiful-dnd';
+import { Draggable, Droppable } from '@hello-pangea/dnd';
 import OportunidadeCard from '@/components/oportunidades/OportunidadeCard';
 import { MoreHorizontal, Check, X } from 'lucide-react';
 import {
@@ -34,7 +34,7 @@ const KanbanColumn = ({ column, columnId, onRenameColumn, onDeleteColumn, onUpda
   
   return (
     <div
-      className={`flex flex-col w-80 min-w-[320px] rounded-2xl bg-gray-100/50`}
+      className={`flex flex-col w-80 min-w-[320px] rounded-2xl bg-transparent`}
       style={{
         borderTop: `4px solid ${column.color || '#e5e7eb'}`
       }}

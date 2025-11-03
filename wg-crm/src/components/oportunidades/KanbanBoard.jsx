@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext } from '@hello-pangea/dnd';
 import KanbanColumn from '@/components/oportunidades/KanbanColumn';
 
 const KanbanBoard = ({ columns, onDragEnd, onRenameColumn, onDeleteColumn, onUpdateOportunidade, onEditOportunidade }) => {
