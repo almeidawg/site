@@ -57,12 +57,12 @@ CREATE TABLE IF NOT EXISTS public.contratos (
 );
 
 -- Índices
-CREATE INDEX idx_contratos_cliente ON contratos(cliente_id);
-CREATE INDEX idx_contratos_proposta ON contratos(proposta_id);
-CREATE INDEX idx_contratos_status ON contratos(status);
-CREATE INDEX idx_contratos_numero ON contratos(numero);
-CREATE INDEX idx_contratos_responsavel ON contratos(responsavel_id);
-CREATE INDEX idx_contratos_dados ON contratos USING gin (dados);
+CREATE INDEX IF NOT EXISTS idx_contratos_cliente ON contratos(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_contratos_proposta ON contratos(proposta_id);
+CREATE INDEX IF NOT EXISTS idx_contratos_status ON contratos(status);
+CREATE INDEX IF NOT EXISTS idx_contratos_numero ON contratos(numero);
+CREATE INDEX IF NOT EXISTS idx_contratos_responsavel ON contratos(responsavel_id);
+CREATE INDEX IF NOT EXISTS idx_contratos_dados ON contratos USING gin (dados);
 
 -- Trigger
 CREATE TRIGGER contratos_updated_at
@@ -100,13 +100,13 @@ CREATE TABLE IF NOT EXISTS public.propostas (
 );
 
 -- Índices
-CREATE INDEX idx_propostas_cliente ON propostas(cliente_id);
-CREATE INDEX idx_propostas_status ON propostas(status);
-CREATE INDEX idx_propostas_numero ON propostas(numero);
-CREATE INDEX idx_propostas_responsavel ON propostas(responsavel_id);
-CREATE INDEX idx_propostas_data_emissao ON propostas(data_emissao);
-CREATE INDEX idx_propostas_dados ON propostas USING gin (dados);
-CREATE INDEX idx_propostas_itens ON propostas USING gin (itens);
+CREATE INDEX IF NOT EXISTS idx_propostas_cliente ON propostas(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_propostas_status ON propostas(status);
+CREATE INDEX IF NOT EXISTS idx_propostas_numero ON propostas(numero);
+CREATE INDEX IF NOT EXISTS idx_propostas_responsavel ON propostas(responsavel_id);
+CREATE INDEX IF NOT EXISTS idx_propostas_data_emissao ON propostas(data_emissao);
+CREATE INDEX IF NOT EXISTS idx_propostas_dados ON propostas USING gin (dados);
+CREATE INDEX IF NOT EXISTS idx_propostas_itens ON propostas USING gin (itens);
 
 -- Trigger
 CREATE TRIGGER propostas_updated_at
@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS public.obras (
   cidade TEXT,
   estado TEXT,
   cep TEXT,
-  status TEXT DEFAULT 'planejamento' CHECK (status IN ('planejamento', 'em_andamento', 'pausada', 'concluida', 'cancelada')),
+  status TEXT DEFAULT 'planejamento' CHECK (status IN ('planejamento', 'em_execucao', 'finalizada', 'atrasada')),
   data_inicio DATE,
   data_fim_prevista DATE,
   data_fim_real DATE,
@@ -153,12 +153,12 @@ CREATE TABLE IF NOT EXISTS public.obras (
 );
 
 -- Índices
-CREATE INDEX idx_obras_cliente ON obras(cliente_id);
-CREATE INDEX idx_obras_contrato ON obras(contrato_id);
-CREATE INDEX idx_obras_status ON obras(status);
-CREATE INDEX idx_obras_codigo ON obras(codigo);
-CREATE INDEX idx_obras_responsavel ON obras(responsavel_id);
-CREATE INDEX idx_obras_dados ON obras USING gin (dados);
+CREATE INDEX IF NOT EXISTS idx_obras_cliente ON obras(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_obras_contrato ON obras(contrato_id);
+CREATE INDEX IF NOT EXISTS idx_obras_status ON obras(status);
+CREATE INDEX IF NOT EXISTS idx_obras_codigo ON obras(codigo);
+CREATE INDEX IF NOT EXISTS idx_obras_responsavel ON obras(responsavel_id);
+CREATE INDEX IF NOT EXISTS idx_obras_dados ON obras USING gin (dados);
 
 -- Trigger
 CREATE TRIGGER obras_updated_at
@@ -202,15 +202,15 @@ CREATE TABLE IF NOT EXISTS public.lancamentos_financeiros (
 );
 
 -- Índices
-CREATE INDEX idx_lancamentos_financeiros_empresa ON lancamentos_financeiros(empresa_id);
-CREATE INDEX idx_lancamentos_financeiros_cliente ON lancamentos_financeiros(cliente_id);
-CREATE INDEX idx_lancamentos_financeiros_tipo ON lancamentos_financeiros(tipo);
-CREATE INDEX idx_lancamentos_financeiros_status ON lancamentos_financeiros(status);
-CREATE INDEX idx_lancamentos_financeiros_categoria ON lancamentos_financeiros(categoria);
-CREATE INDEX idx_lancamentos_financeiros_vencimento ON lancamentos_financeiros(data_vencimento);
-CREATE INDEX idx_lancamentos_financeiros_emissao ON lancamentos_financeiros(data_emissao);
-CREATE INDEX idx_lancamentos_financeiros_contrato ON lancamentos_financeiros(contrato_id);
-CREATE INDEX idx_lancamentos_financeiros_obra ON lancamentos_financeiros(obra_id);
+CREATE INDEX IF NOT EXISTS idx_lancamentos_financeiros_empresa ON lancamentos_financeiros(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_lancamentos_financeiros_cliente ON lancamentos_financeiros(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_lancamentos_financeiros_tipo ON lancamentos_financeiros(tipo);
+CREATE INDEX IF NOT EXISTS idx_lancamentos_financeiros_status ON lancamentos_financeiros(status);
+CREATE INDEX IF NOT EXISTS idx_lancamentos_financeiros_categoria ON lancamentos_financeiros(categoria);
+CREATE INDEX IF NOT EXISTS idx_lancamentos_financeiros_vencimento ON lancamentos_financeiros(data_vencimento);
+CREATE INDEX IF NOT EXISTS idx_lancamentos_financeiros_emissao ON lancamentos_financeiros(data_emissao);
+CREATE INDEX IF NOT EXISTS idx_lancamentos_financeiros_contrato ON lancamentos_financeiros(contrato_id);
+CREATE INDEX IF NOT EXISTS idx_lancamentos_financeiros_obra ON lancamentos_financeiros(obra_id);
 
 -- Trigger
 CREATE TRIGGER lancamentos_financeiros_updated_at
@@ -242,8 +242,8 @@ CREATE TABLE IF NOT EXISTS public.registro_categorias (
 );
 
 -- Índices
-CREATE INDEX idx_registro_categorias_ativo ON registro_categorias(ativo);
-CREATE INDEX idx_registro_categorias_nome ON registro_categorias(nome);
+CREATE INDEX IF NOT EXISTS idx_registro_categorias_ativo ON registro_categorias(ativo);
+CREATE INDEX IF NOT EXISTS idx_registro_categorias_nome ON registro_categorias(nome);
 
 -- Trigger
 CREATE TRIGGER registro_categorias_updated_at
@@ -286,16 +286,16 @@ CREATE TABLE IF NOT EXISTS public.registros_trabalho (
 );
 
 -- Índices
-CREATE INDEX idx_registros_trabalho_profissional ON registros_trabalho(profissional_id);
-CREATE INDEX idx_registros_trabalho_cliente ON registros_trabalho(cliente_id);
-CREATE INDEX idx_registros_trabalho_proposta ON registros_trabalho(proposta_id);
-CREATE INDEX idx_registros_trabalho_obra ON registros_trabalho(obra_id);
-CREATE INDEX idx_registros_trabalho_contrato ON registros_trabalho(contrato_id);
-CREATE INDEX idx_registros_trabalho_data ON registros_trabalho(data);
-CREATE INDEX idx_registros_trabalho_categoria ON registros_trabalho(categoria_id);
-CREATE INDEX idx_registros_trabalho_aprovado ON registros_trabalho(aprovado);
-CREATE INDEX idx_registros_trabalho_lancamento ON registros_trabalho(lancamento_id);
-CREATE INDEX idx_registros_trabalho_dados ON registros_trabalho USING gin (dados);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_profissional ON registros_trabalho(profissional_id);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_cliente ON registros_trabalho(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_proposta ON registros_trabalho(proposta_id);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_obra ON registros_trabalho(obra_id);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_contrato ON registros_trabalho(contrato_id);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_data ON registros_trabalho(data);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_categoria ON registros_trabalho(categoria_id);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_aprovado ON registros_trabalho(aprovado);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_lancamento ON registros_trabalho(lancamento_id);
+CREATE INDEX IF NOT EXISTS idx_registros_trabalho_dados ON registros_trabalho USING gin (dados);
 
 -- Trigger
 CREATE TRIGGER registros_trabalho_updated_at

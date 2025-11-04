@@ -406,19 +406,20 @@ BEGIN
         NEW.cpf_cnpj := REGEXP_REPLACE(NEW.cpf_cnpj, '[^0-9]', '', 'g');
     END IF;
 
-    -- Definir tipo baseado no tamanho do documento
-    IF NEW.cpf_cnpj IS NOT NULL AND NEW.tipo_pessoa IS NULL THEN
-        IF LENGTH(NEW.cpf_cnpj) = 11 THEN
-            NEW.tipo_pessoa := 'fisica';
-        ELSIF LENGTH(NEW.cpf_cnpj) = 14 THEN
-            NEW.tipo_pessoa := 'juridica';
-        END IF;
-    END IF;
+    -- ⚠️ COMENTADO: Campos tipo_pessoa e empresa_id não existem na tabela entities
+    -- -- Definir tipo baseado no tamanho do documento
+    -- IF NEW.cpf_cnpj IS NOT NULL AND NEW.tipo_pessoa IS NULL THEN
+    --     IF LENGTH(NEW.cpf_cnpj) = 11 THEN
+    --         NEW.tipo_pessoa := 'fisica';
+    --     ELSIF LENGTH(NEW.cpf_cnpj) = 14 THEN
+    --         NEW.tipo_pessoa := 'juridica';
+    --     END IF;
+    -- END IF;
 
-    -- Garantir empresa_id
-    IF NEW.empresa_id IS NULL THEN
-        NEW.empresa_id := current_org();
-    END IF;
+    -- -- Garantir empresa_id
+    -- IF NEW.empresa_id IS NULL THEN
+    --     NEW.empresa_id := current_org();
+    -- END IF;
 
     -- Timestamps
     IF TG_OP = 'INSERT' THEN
@@ -683,40 +684,43 @@ COMMENT ON TRIGGER propagate_won_opportunity ON pipelines IS
 -- =================================================================
 -- TRIGGER: bank_accounts_uni_principal
 -- Descrição: Garantir apenas uma conta principal por empresa
+-- ⚠️ COMENTADO: Tabela contas_financeiras não tem coluna 'dados'
 -- =================================================================
 
-DROP TRIGGER IF EXISTS bank_accounts_uni_principal ON contas_financeiras;
-DROP FUNCTION IF EXISTS trigger_bank_accounts_uni_principal();
+-- DROP TRIGGER IF EXISTS bank_accounts_uni_principal ON contas_financeiras;
+-- DROP FUNCTION IF EXISTS trigger_bank_accounts_uni_principal();
 
-CREATE OR REPLACE FUNCTION trigger_bank_accounts_uni_principal()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    -- Se está marcando como principal (adicionando campo principal aos dados)
-    IF NEW.dados->>'principal' = 'true' THEN
-        -- Desmarcar outras contas da mesma empresa
-        UPDATE contas_financeiras
-        SET dados = dados - 'principal'
-        WHERE empresa_id = NEW.empresa_id
-            AND id != NEW.id
-            AND dados->>'principal' = 'true';
+-- CREATE OR REPLACE FUNCTION trigger_bank_accounts_uni_principal()
+-- RETURNS trigger
+-- LANGUAGE plpgsql
+-- AS $$
+-- BEGIN
+--     -- Se está marcando como principal (adicionando campo principal aos dados)
+--     IF NEW.dados->>'principal' = 'true' THEN
+--         -- Desmarcar outras contas da mesma empresa
+--         UPDATE contas_financeiras
+--         SET dados = dados - 'principal'
+--         WHERE empresa_id = NEW.empresa_id
+--             AND id != NEW.id
+--             AND dados->>'principal' = 'true';
 
-        RAISE NOTICE 'Conta % definida como principal', NEW.apelido;
-    END IF;
+--         RAISE NOTICE 'Conta % definida como principal', NEW.apelido;
+--     END IF;
 
-    RETURN NEW;
-END;
-$$;
+--     RETURN NEW;
+-- END;
+-- $$;
 
-CREATE TRIGGER bank_accounts_uni_principal
-    BEFORE INSERT OR UPDATE ON contas_financeiras
-    FOR EACH ROW
-    WHEN (NEW.dados->>'principal' = 'true')
-    EXECUTE FUNCTION trigger_bank_accounts_uni_principal();
+-- CREATE TRIGGER bank_accounts_uni_principal
+--     BEFORE INSERT OR UPDATE ON contas_financeiras
+--     FOR EACH ROW
+--     WHEN (NEW.dados->>'principal' = 'true')
+--     EXECUTE FUNCTION trigger_bank_accounts_uni_principal();
 
-COMMENT ON TRIGGER bank_accounts_uni_principal ON contas_financeiras IS
-'Garante que apenas uma conta financeira seja marcada como principal por empresa';
+-- COMMENT ON TRIGGER bank_accounts_uni_principal ON contas_financeiras IS
+-- 'Garante que apenas uma conta financeira seja marcada como principal por empresa';
+
+-- ⚠️ NOTA: Adicionar coluna 'dados JSONB' na tabela contas_financeiras se necessário
 
 -- =================================================================
 -- TRIGGER: calc_quantidade_diaria
