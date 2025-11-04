@@ -14,6 +14,7 @@ import Financeiro from '@/components/pages/Financeiro';
 import IntegrationsPage from '@/pages/IntegrationsPage';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import Arquitetura from '@/components/pages/Arquitetura';
+import Engenharia from '@/components/pages/Engenharia';
 import Assistencia from '@/components/pages/Assistencia';
 import Onboarding from '@/components/pages/Onboarding';
 import PortalCliente from '@/pages/PortalCliente';
@@ -63,7 +64,7 @@ const CrmLayout = () => {
             <Route path="/oportunidades" element={<Oportunidades />} />
             <Route path="/propostas" element={<Propostas />} />
             <Route path="/contratos" element={<Contratos />} />
-            <Route path="/engenharia" element={<Obras />} />
+            <Route path="/engenharia" element={<Engenharia />} />
             <Route path="/marcenaria" element={<Marcenaria />} />
             <Route path="/compras" element={<Compras />} />
             <Route path="/pessoas" element={<Pessoas />} />
