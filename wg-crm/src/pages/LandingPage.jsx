@@ -76,7 +76,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header Minimalista */}
-      <header className="fixed top-0 left-0 right-0 z-10 px-8 py-6 bg-white/80 backdrop-blur-sm">
+      <header className="fixed top-0 left-0 right-0 z-10 px-4 sm:px-8 py-4 sm:py-6 bg-white/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <motion.div
             initial={{ opacity: 0 }}
@@ -99,8 +99,8 @@ const LandingPage = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex min-h-screen pt-24 pb-12 px-6">
-        <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center">
+      <div className="flex min-h-screen pt-20 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
           {/* Left Side - Hero Content */}
           <motion.div
@@ -109,20 +109,20 @@ const LandingPage = () => {
             transition={{ duration: 0.6 }}
             className="space-y-8"
           >
-            <div className="space-y-12">
-              <h1 className="text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
+            <div className="space-y-6 sm:space-y-12">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
                 <span className="text-gray-900">Arquitetura.</span>
-                <span className="block mt-2 text-gray-900">Engenharia.</span>
-                <span className="block mt-2 bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
+                <span className="block mt-1 sm:mt-2 text-gray-900">Engenharia.</span>
+                <span className="block mt-1 sm:mt-2 bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
                   Marcenaria.
                 </span>
               </h1>
 
-              <div className="space-y-4">
-                <p className="text-2xl text-gray-600 font-light">
+              <div className="space-y-3 sm:space-y-4">
+                <p className="text-lg sm:text-xl md:text-2xl text-gray-600 font-light">
                   Uma plataforma integrada.
                 </p>
-                <p className="text-xl text-gray-600 leading-relaxed max-w-xl">
+                <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed max-w-xl">
                   Do orçamento à entrega, controle total do seu negócio.
                 </p>
               </div>
@@ -133,15 +133,15 @@ const LandingPage = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="flex gap-16 pt-8 border-t border-gray-200"
+              className="flex flex-col sm:flex-row gap-6 sm:gap-12 md:gap-16 pt-6 sm:pt-8 border-t border-gray-200"
             >
               <div>
-                <div className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent mb-1">R$ 2.8M+</div>
-                <div className="text-sm text-gray-500 uppercase tracking-wider">Oportunidades ativas</div>
+                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent mb-1">R$ 2.8M+</div>
+                <div className="text-xs sm:text-sm text-gray-500 uppercase tracking-wider">Oportunidades ativas</div>
               </div>
               <div>
-                <div className="text-4xl font-bold text-gray-900 mb-1">R$ 193K</div>
-                <div className="text-sm text-gray-500 uppercase tracking-wider">Projetos em andamento</div>
+                <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-1">R$ 193K</div>
+                <div className="text-xs sm:text-sm text-gray-500 uppercase tracking-wider">Projetos em andamento</div>
               </div>
             </motion.div>
           </motion.div>
@@ -154,26 +154,26 @@ const LandingPage = () => {
             className="flex justify-center lg:justify-end"
           >
             <div className="w-full max-w-md">
-              <div className="bg-white rounded-xl border border-gray-200 p-10 space-y-6">
-                <div className="text-center space-y-3">
-                  <h3 className="text-3xl font-bold text-gray-900">Entrar</h3>
+              <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 md:p-10 space-y-5 sm:space-y-6">
+                <div className="text-center space-y-2 sm:space-y-3">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">Entrar</h3>
                   <p className="text-gray-400 text-sm">Acesse sua conta</p>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
+                <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <label className="text-sm font-medium text-gray-700">Email</label>
                     <Input
                       type="email"
                       placeholder="seu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="h-12"
+                      className="h-11 sm:h-12"
                       required
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <label className="text-sm font-medium text-gray-700">Senha</label>
                     <div className="relative">
                       <Input
@@ -181,7 +181,7 @@ const LandingPage = () => {
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="h-12 pr-12"
+                        className="h-11 sm:h-12 pr-12"
                         required
                       />
                       <button
@@ -189,7 +189,7 @@ const LandingPage = () => {
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                       >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </div>
@@ -197,11 +197,11 @@ const LandingPage = () => {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-semibold text-base shadow-lg shadow-orange-500/30"
+                    className="w-full h-11 sm:h-12 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-semibold text-sm sm:text-base shadow-lg shadow-orange-500/30"
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                         Entrando...
                       </>
                     ) : (
@@ -223,18 +223,18 @@ const LandingPage = () => {
                   type="button"
                   onClick={handleGoogleLogin}
                   variant="outline"
-                  className="w-full h-12 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-semibold text-base"
+                  className="w-full h-11 sm:h-12 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-semibold text-sm sm:text-base"
                 >
                   <GoogleIcon />
                   <span className="ml-2">Continuar com Google</span>
                 </Button>
 
-                <div className="text-center space-y-4">
+                <div className="text-center space-y-3 sm:space-y-4">
                   <button className="text-sm text-orange-600 hover:text-orange-700 font-medium">
                     Esqueceu sua senha?
                   </button>
 
-                  <div className="pt-4 border-t border-gray-100">
+                  <div className="pt-3 sm:pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-500">
                       Teste: <span className="font-mono text-orange-600">admin@wg.com</span> / <span className="font-mono text-orange-600">senha123</span>
                     </p>
