@@ -4,6 +4,19 @@
 
 ---
 
+## ⚠️ IMPORTANTE: Estratégia de Branches
+
+**LEIA PRIMEIRO**: `.claude/docs/BRANCHING_STRATEGY.md`
+
+**Resumo rápido:**
+- Branch `dev-supabase-local` = Desenvolvimento completo (Docker + Edge Functions + React)
+- Branch `main` = Apenas React conectado ao LIVE
+- **Deploy Supabase LIVE = CLI/MCP direto, NÃO via Git merge!**
+
+Se você quer fazer merge Git para sincronizar código, tudo bem! Mas **NÃO espere que isso faça deploy automático no Supabase LIVE**. Deploy é via CLI/MCP.
+
+---
+
 ## 🎯 Filosofia: Segurança Primeiro
 
 ### Regra de Ouro

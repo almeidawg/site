@@ -54,6 +54,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 @.claude/docs/DEPLOY_CHECKLIST.md
 @.claude/docs/EDGE_FUNCTIONS.md
 @.claude/docs/SECURITY.md
+@.claude/docs/BRANCHING_STRATEGY.md
+
+---
+
+## 🌿 ESTRATÉGIA DE BRANCHES (CRÍTICO!)
+
+**LEIA ANTES DE FAZER QUALQUER MERGE OU DEPLOY:**
+
+Este projeto usa **2 branches Git** com propósitos DIFERENTES:
+
+### `dev-supabase-local` (Desenvolvimento)
+- ✅ Supabase rodando localmente (Docker)
+- ✅ Edge Functions rodando localmente
+- ✅ Frontend → http://127.0.0.1:54321
+- ✅ DESENVOLVER TUDO AQUI (migrations, functions, React)
+
+### `main` (Teste em Produção)
+- ✅ Apenas React app
+- ✅ Frontend → https://vyxscnevgeubfgfstmtf.supabase.co (LIVE)
+- ❌ SEM Docker, SEM Edge Functions locais
+- ✅ APENAS para testar se app funciona em LIVE
+
+### ⚠️ DEPLOY SUPABASE ≠ GIT MERGE!
+
+**IMPORTANTE**: Deploy de migrations/functions para Supabase LIVE é via **CLI/MCP direto**, NÃO via Git merge!
+
+```bash
+# ❌ ERRADO (esperar que merge faça deploy):
+git checkout main
+git merge dev-supabase-local  # ❌ Não deploya nada!
+
+# ✅ CORRETO (deploy via MCP/CLI):
+Task → supabase-live → "aplicar migration X no LIVE"
+# OU
+supabase db push --linked
+```
+
+**Fazer merge de `Supabase/` para `main` NÃO FAZ MAL**, são só arquivos. Mas **NÃO FAZ DEPLOY AUTOMÁTICO**.
+
+**📖 Detalhes completos**: Veja `.claude/docs/BRANCHING_STRATEGY.md`
 
 ---
 
