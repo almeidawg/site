@@ -59,8 +59,92 @@ const Marcenaria = () => {
     useEffect(() => {
         fetchBoardAndCards();
     }, [fetchBoardAndCards]);
-    
+
     const handleNotImplemented = () => toast({ title: "Funcionalidade em desenvolvimento" });
+
+    const onDragEnd = async (result) => {
+        if (!result.destination) return;
+        const { source, destination, draggableId } = result;
+
+        // Movendo para coluna diferente
+        if (source.droppableId !== destination.droppableId) {
+            const sourceCol = columns[source.droppableId];
+            const destCol = columns[destination.droppableId];
+
+            if (!sourceCol || !destCol) return;
+
+            const movedCard = sourceCol.items.find(item => item.id === draggableId);
+            if (!movedCard) return;
+
+            const novaPosicao = (destination.index + 1) * 10;
+
+            // Update local state (optimistic)
+            const sourceItems = [...sourceCol.items];
+            sourceItems.splice(source.index, 1);
+
+            const destItems = [...destCol.items];
+            destItems.splice(destination.index, 0, movedCard);
+
+            setColumns({
+                ...columns,
+                [source.droppableId]: { ...sourceCol, items: sourceItems },
+                [destination.droppableId]: { ...destCol, items: destItems }
+            });
+
+            // Update database
+            const { error } = await supabase
+                .from('kanban_cards')
+                .update({
+                    coluna_id: destCol.id,
+                    posicao: novaPosicao,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', draggableId);
+
+            if (error) {
+                toast({
+                    title: "Erro ao mover card",
+                    description: error.message,
+                    variant: "destructive"
+                });
+                fetchBoardAndCards(); // Revert
+            } else {
+                toast({
+                    title: "Card movido!",
+                    description: `Movido para "${destCol.name}".`
+                });
+            }
+        } else {
+            // Reordenando na mesma coluna
+            const column = columns[source.droppableId];
+            const items = [...column.items];
+            const [removed] = items.splice(source.index, 1);
+            items.splice(destination.index, 0, removed);
+
+            setColumns({
+                ...columns,
+                [source.droppableId]: { ...column, items }
+            });
+
+            const novaPosicao = (destination.index + 1) * 10;
+            const { error } = await supabase
+                .from('kanban_cards')
+                .update({
+                    posicao: novaPosicao,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', draggableId);
+
+            if (error) {
+                toast({
+                    title: "Erro ao reordenar",
+                    description: error.message,
+                    variant: "destructive"
+                });
+                fetchBoardAndCards(); // Revert
+            }
+        }
+    };
 
     if (loading) {
       return (
@@ -86,7 +170,7 @@ const Marcenaria = () => {
                 <div className="flex-grow overflow-hidden">
                     <KanbanBoard
                         columns={columns}
-                        onDragEnd={handleNotImplemented}
+                        onDragEnd={onDragEnd}
                         onRenameColumn={handleNotImplemented}
                         onDeleteColumn={handleNotImplemented}
                         onUpdateOportunidade={handleNotImplemented}
