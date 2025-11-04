@@ -234,7 +234,7 @@ const Dashboard = ({ navigate }) => {
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -4 }}
                 onClick={() => navigate(alerta.link)}
-                className="bg-white rounded-xl p-4 cursor-pointer flex flex-col items-center text-center shadow-sm"
+                className="bg-white rounded-xl p-4 cursor-pointer flex flex-col items-center text-center shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
               >
                 <div className={`p-3 rounded-full ${alerta.color} mb-2`}>
                   <alerta.icon size={24} />

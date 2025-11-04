@@ -35,7 +35,7 @@ const PipelineWidget = () => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border p-4 bg-white/50"
+            className="rounded-2xl border p-4 bg-wg-gray-light"
         >
             <div className="text-sm font-semibold mb-3">Pipeline de Vendas</div>
             <div className="space-y-2">

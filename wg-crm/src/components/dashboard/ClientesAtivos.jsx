@@ -75,7 +75,7 @@ const ClientesAtivos = () => {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: index * 0.05 }}
-                                className="p-4 rounded-lg border border-gray-200/50 bg-white/10 hover:bg-white/20 transition-colors"
+                                className="p-4 rounded-lg border border-gray-200/50 bg-wg-gray-light/50 hover:bg-wg-gray-light/80 transition-colors"
                             >
                                 <div className="flex justify-between items-start">
                                     <div>

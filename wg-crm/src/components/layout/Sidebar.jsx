@@ -87,7 +87,7 @@ const Sidebar = ({ currentPage, setCurrentPage, isOpen, setIsOpen }) => {
       variants={sidebarVariants}
       animate={isOpen ? 'open' : 'closed'}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="bg-white/70 backdrop-blur-lg border-r border-gray-200 text-gray-800 flex flex-col fixed top-0 left-0 h-full z-50 shadow-xl shadow-gray-200/20"
+      className="bg-wg-gray-light/90 backdrop-blur-lg border-r border-gray-200 text-gray-800 flex flex-col fixed top-0 left-0 h-full z-50 shadow-xl shadow-gray-200/20"
     >
       <div className="flex items-center justify-between p-4 h-20 border-b border-gray-200">
         <AnimatePresence>

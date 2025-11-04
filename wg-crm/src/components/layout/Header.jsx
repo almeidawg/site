@@ -53,7 +53,7 @@ const Header = ({ user: propUser, toggleSidebar, isStore = false }) => {
               <input
                 type="text"
                 placeholder={isStore ? "Buscar produtos..." : "Buscar clientes, obras..."}
-                className={`w-full pl-10 pr-4 py-2 rounded-xl border transition-all ${isStore ? 'bg-white/10 border-white/20 focus:bg-white/20 focus:ring-purple-500/50' : 'border-purple-200/50 bg-white/50 focus:ring-purple-500/50'}`}
+                className={`w-full pl-10 pr-4 py-2 rounded-xl border transition-all ${isStore ? 'bg-white/10 border-white/20 focus:bg-white/20 focus:ring-purple-500/50' : 'border-purple-200/50 bg-wg-gray-light/70 focus:ring-purple-500/50'}`}
               />
             </div>
           </div>

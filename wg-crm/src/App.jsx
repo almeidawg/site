@@ -16,11 +16,11 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { Navigate } from 'react-router-dom';
 
 const LoadingScreen = () => (
-  <div className="min-h-screen w-full flex items-center justify-center bg-white">
+  <div className="min-h-screen w-full flex items-center justify-center bg-wg-gray-light">
       <div className='text-center'>
-          <img 
-            src="https://horizons-cdn.hostinger.com/480e77e6-d3aa-4ba8-aa6c-70d9820f550f/grupowgalmeida_png-mXTto.png" 
-            alt="Logo" 
+          <img
+            src="https://horizons-cdn.hostinger.com/480e77e6-d3aa-4ba8-aa6c-70d9820f550f/grupowgalmeida_png-mXTto.png"
+            alt="Logo"
             className="h-28 mx-auto mb-4"
           />
       </div>

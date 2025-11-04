@@ -40,7 +40,7 @@ const OportunidadeCard = ({ data, isDragging, onUpdateOportunidade, onEdit }) =>
     <motion.div
       layout
       className={cn(
-        "bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow p-3 border border-gray-100",
+        "bg-wg-gray-light rounded-lg shadow-sm hover:shadow-lg transition-shadow p-3 border border-gray-200",
         isDragging && "shadow-xl scale-105 rotate-2"
       )}
     >

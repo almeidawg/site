@@ -75,11 +75,11 @@ const ObrasStatus = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
+      className="bg-white rounded-2xl shadow-md border border-gray-200 p-6"
     >
       <h2 className="text-xl font-bold mb-6 text-gray-800">Status das Obras</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Object.entries(statusConfig).map(([status, config], index) => {
           const count = stats[status];
           const Icon = config.icon;
@@ -90,14 +90,12 @@ const ObrasStatus = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.1 }}
-              className="p-4 rounded-xl border border-gray-200 hover:shadow-lg transition-shadow bg-white"
+              className="p-4 rounded-xl border border-gray-100 hover:shadow-md transition-shadow bg-gray-50 hover:bg-white flex flex-col items-start"
             >
-              <div className="flex items-center gap-3 mb-2">
-                <div className={`p-2 rounded-lg ${config.color}`}>
-                  <Icon size={20} />
-                </div>
-                <span className="font-medium text-sm text-gray-700">{config.label}</span>
+              <div className={`p-2 rounded-lg ${config.color} mb-3`}>
+                <Icon size={20} />
               </div>
+              <span className="font-medium text-sm text-gray-700 mb-2">{config.label}</span>
               <p className="text-3xl font-bold text-gray-900">{count}</p>
             </motion.div>
           );

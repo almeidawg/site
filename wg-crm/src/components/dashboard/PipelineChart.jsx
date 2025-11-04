@@ -42,7 +42,7 @@ const PipelineChart = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-gray-200">
+        <div className="bg-wg-gray-light/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-gray-200">
           <p className="font-bold text-gray-800">{`${label}`}</p>
           <p className="text-sm text-indigo-600">{`Valor: ${formatCurrency(payload[0].value)}`}</p>
           <p className="text-sm text-gray-600">{`Oportunidades: ${payload[0].payload.count}`}</p>
