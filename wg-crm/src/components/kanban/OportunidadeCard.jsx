@@ -19,7 +19,7 @@ const OportunidadeCard = ({ card, onEditClient, onCardDeleted, onCardUpdated }) 
   const { toast } = useToast();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(card.titulo);
-  const valor = parseFloat(card.valor_proposta || 0);
+  const valor = parseFloat(card.valor || 0);
 
   const handleTitleSave = async () => {
     const newTitle = title.trim();
@@ -89,16 +89,18 @@ const OportunidadeCard = ({ card, onEditClient, onCardDeleted, onCardUpdated }) 
           </h3>
         )}
         <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity ml-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditClient(card.cliente_id);
-            }}
-            className="text-gray-400 hover:text-blue-500 p-1"
-            title="Editar Cliente"
-          >
-            <Edit size={16} />
-          </button>
+          {card.entity_id && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditClient(card.entity_id);
+              }}
+              className="text-gray-400 hover:text-blue-500 p-1"
+              title="Editar Cliente"
+            >
+              <Edit size={16} />
+            </button>
+          )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button

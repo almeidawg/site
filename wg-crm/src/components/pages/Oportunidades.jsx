@@ -49,13 +49,13 @@ const Oportunidades = () => {
     const columnIdsMap = {}; // Map column IDs to column keys
 
     boardData.kanban_colunas
-      .sort((a, b) => a.posicao - b.posicao)
+      .sort((a, b) => a.pos - b.pos)
       .forEach(col => {
-        const key = col.titulo.toLowerCase().replace(/ /g, '_');
+        const key = col.nome.toLowerCase().replace(/ /g, '_');
         initialColumns[key] = {
           id: col.id,
-          name: col.titulo,
-          color: col.color,
+          name: col.nome,
+          color: col.cor,
           items: []
         };
         columnIdsMap[col.id] = key;
