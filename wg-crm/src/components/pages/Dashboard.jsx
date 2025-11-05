@@ -25,14 +25,14 @@ const Dashboard = ({ navigate }) => {
         const { data: opBoard } = await supabase
           .from('kanban_boards')
           .select('id')
-          .eq('ambiente', 'oportunidades')
+          .eq('modulo', 'oportunidades')
           .maybeSingle();
 
         if (opBoard) {
           // Get all columns for this board
           const { data: opColunas } = await supabase
             .from('kanban_colunas')
-            .select('id, titulo')
+            .select('id, nome')
             .eq('board_id', opBoard.id);
 
           const colunaIds = opColunas?.map(c => c.id) || [];
@@ -40,7 +40,7 @@ const Dashboard = ({ navigate }) => {
           if (colunaIds.length > 0) {
             const { data: opCards } = await supabase
               .from('kanban_cards')
-              .select('*, coluna:kanban_colunas(titulo)')
+              .select('*, coluna:kanban_colunas(nome)')
               .in('coluna_id', colunaIds);
 
             setOportunidades(opCards || []);
