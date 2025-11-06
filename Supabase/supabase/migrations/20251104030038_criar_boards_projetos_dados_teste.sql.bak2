@@ -1,0 +1,335 @@
+-- =============================================
+-- Migration: Criar boards de projetos e dados de teste
+-- Descrição: Adiciona boards de arquitetura, engenharia e marcenaria com colunas e dados de teste
+-- Data: 2025-11-03
+-- =============================================
+
+BEGIN;
+
+-- ========================================
+-- 1. CRIAR BOARDS FALTANTES
+-- ========================================
+
+-- Board Arquitetura
+INSERT INTO kanban_boards (id, titulo, ambiente, descricao)
+VALUES (
+  gen_random_uuid(),
+  'Projetos de Arquitetura',
+  'arquitetura',
+  'Gestão de projetos arquitetônicos'
+) ON CONFLICT (ambiente) DO NOTHING;
+
+-- Board Engenharia
+INSERT INTO kanban_boards (id, titulo, ambiente, descricao)
+VALUES (
+  gen_random_uuid(),
+  'Projetos de Engenharia',
+  'engenharia',
+  'Gestão de projetos de engenharia'
+) ON CONFLICT (ambiente) DO NOTHING;
+
+-- Board Marcenaria
+INSERT INTO kanban_boards (id, titulo, ambiente, descricao)
+VALUES (
+  gen_random_uuid(),
+  'Projetos de Marcenaria',
+  'marcenaria',
+  'Gestão de projetos de marcenaria'
+) ON CONFLICT (ambiente) DO NOTHING;
+
+-- ========================================
+-- 2. CRIAR COLUNAS PADRÃO PARA CADA BOARD
+-- ========================================
+
+-- Colunas para Arquitetura
+DO $$
+DECLARE
+  v_board_id uuid;
+BEGIN
+  SELECT id INTO v_board_id FROM kanban_boards WHERE ambiente = 'arquitetura';
+
+  -- Briefing
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Briefing', 0, '#3B82F6');
+
+  -- Conceitual
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Conceitual', 1, '#8B5CF6');
+
+  -- Executivo
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Executivo', 2, '#F59E0B');
+
+  -- Aprovação
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Aprovação', 3, '#10B981');
+
+  -- Concluído
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Concluído', 4, '#6B7280');
+END $$;
+
+-- Colunas para Engenharia
+DO $$
+DECLARE
+  v_board_id uuid;
+BEGIN
+  SELECT id INTO v_board_id FROM kanban_boards WHERE ambiente = 'engenharia';
+
+  -- Planejamento
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Planejamento', 0, '#3B82F6');
+
+  -- Em Execução
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Em Execução', 1, '#F59E0B');
+
+  -- Vistoria
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Vistoria', 2, '#8B5CF6');
+
+  -- Concluída
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Concluída', 3, '#10B981');
+END $$;
+
+-- Colunas para Marcenaria
+DO $$
+DECLARE
+  v_board_id uuid;
+BEGIN
+  SELECT id INTO v_board_id FROM kanban_boards WHERE ambiente = 'marcenaria';
+
+  -- Projeto
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Projeto', 0, '#3B82F6');
+
+  -- Produção
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Produção', 1, '#F59E0B');
+
+  -- Acabamento
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Acabamento', 2, '#8B5CF6');
+
+  -- Instalação
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Instalação', 3, '#10B981');
+
+  -- Finalizado
+  INSERT INTO kanban_colunas (id, board_id, nome, pos, cor)
+  VALUES (gen_random_uuid(), v_board_id, 'Finalizado', 4, '#6B7280');
+END $$;
+
+-- ========================================
+-- 3. CRIAR ENTIDADES (CLIENTES) DE TESTE
+-- ========================================
+
+-- Cliente Arquitetura
+INSERT INTO entities (id, tipo, nome, email, telefone)
+VALUES (
+  gen_random_uuid(),
+  'cliente',
+  'João Silva Arquitetura',
+  'joao@email.com',
+  '(11) 98765-4321'
+);
+
+-- Cliente Engenharia
+INSERT INTO entities (id, tipo, nome, email, telefone)
+VALUES (
+  gen_random_uuid(),
+  'cliente',
+  'Maria Santos Construtora',
+  'maria@email.com',
+  '(11) 97654-3210'
+);
+
+-- Cliente Marcenaria
+INSERT INTO entities (id, tipo, nome, email, telefone)
+VALUES (
+  gen_random_uuid(),
+  'cliente',
+  'Pedro Oliveira Móveis',
+  'pedro@email.com',
+  '(11) 96543-2109'
+);
+
+-- ========================================
+-- 4. CRIAR CONTRATOS DE TESTE
+-- ========================================
+
+-- Contrato Arquitetura
+DO $$
+DECLARE
+  v_entity_id uuid;
+  v_contrato_id uuid;
+BEGIN
+  SELECT id INTO v_entity_id FROM entities WHERE nome = 'João Silva Arquitetura';
+  v_contrato_id := gen_random_uuid();
+
+  INSERT INTO contratos (
+    id, numero, cliente_id, titulo, descricao, valor_total,
+    data_inicio, status, tipo, created_at
+  ) VALUES (
+    v_contrato_id,
+    'ARQ-2025-001',
+    v_entity_id,
+    'Projeto Residencial Alto Padrão',
+    'Projeto arquitetônico completo para residência de 350m²',
+    85000.00,
+    CURRENT_DATE,
+    'ativo',
+    'arquitetura',
+    NOW()
+  );
+END $$;
+
+-- Contrato Engenharia
+DO $$
+DECLARE
+  v_entity_id uuid;
+  v_contrato_id uuid;
+BEGIN
+  SELECT id INTO v_entity_id FROM entities WHERE nome = 'Maria Santos Construtora';
+  v_contrato_id := gen_random_uuid();
+
+  INSERT INTO contratos (
+    id, numero, cliente_id, titulo, descricao, valor_total,
+    data_inicio, status, tipo, created_at
+  ) VALUES (
+    v_contrato_id,
+    'ENG-2025-001',
+    v_entity_id,
+    'Projeto Estrutural Edifício Comercial',
+    'Cálculo estrutural e acompanhamento de obra',
+    125000.00,
+    CURRENT_DATE,
+    'ativo',
+    'engenharia',
+    NOW()
+  );
+END $$;
+
+-- Contrato Marcenaria
+DO $$
+DECLARE
+  v_entity_id uuid;
+  v_contrato_id uuid;
+BEGIN
+  SELECT id INTO v_entity_id FROM entities WHERE nome = 'Pedro Oliveira Móveis';
+  v_contrato_id := gen_random_uuid();
+
+  INSERT INTO contratos (
+    id, numero, cliente_id, titulo, descricao, valor_total,
+    data_inicio, status, tipo, created_at
+  ) VALUES (
+    v_contrato_id,
+    'MAR-2025-001',
+    v_entity_id,
+    'Móveis Planejados Sala e Cozinha',
+    'Produção e instalação de móveis planejados',
+    45000.00,
+    CURRENT_DATE,
+    'ativo',
+    'marcenaria',
+    NOW()
+  );
+END $$;
+
+-- ========================================
+-- 5. CRIAR CARDS KANBAN VINCULADOS
+-- ========================================
+
+-- Card Arquitetura (Conceitual)
+DO $$
+DECLARE
+  v_coluna_id uuid;
+  v_contrato_id uuid;
+BEGIN
+  SELECT kc.id INTO v_coluna_id
+  FROM kanban_colunas kc
+  JOIN kanban_boards kb ON kb.id = kc.board_id
+  WHERE kb.ambiente = 'arquitetura' AND kc.titulo = 'Conceitual';
+
+  SELECT id INTO v_contrato_id FROM contratos WHERE numero = 'ARQ-2025-001';
+
+  INSERT INTO kanban_cards (
+    id, coluna_id, titulo, descricao, valor, posicao,
+    entity_id, dados
+  ) VALUES (
+    gen_random_uuid(),
+    v_coluna_id,
+    'Projeto Residencial Alto Padrão',
+    'Cliente: João Silva - Fase de estudo conceitual',
+    85000.00,
+    0,
+    (SELECT cliente_id FROM contratos WHERE id = v_contrato_id),
+    jsonb_build_object('contrato_id', v_contrato_id, 'tipo', 'arquitetura')
+  );
+END $$;
+
+-- Card Engenharia (Em Execução)
+DO $$
+DECLARE
+  v_coluna_id uuid;
+  v_contrato_id uuid;
+BEGIN
+  SELECT kc.id INTO v_coluna_id
+  FROM kanban_colunas kc
+  JOIN kanban_boards kb ON kb.id = kc.board_id
+  WHERE kb.ambiente = 'engenharia' AND kc.titulo = 'Em Execução';
+
+  SELECT id INTO v_contrato_id FROM contratos WHERE numero = 'ENG-2025-001';
+
+  INSERT INTO kanban_cards (
+    id, coluna_id, titulo, descricao, valor, posicao,
+    entity_id, dados
+  ) VALUES (
+    gen_random_uuid(),
+    v_coluna_id,
+    'Projeto Estrutural Edifício Comercial',
+    'Cliente: Maria Santos - Obra em execução',
+    125000.00,
+    0,
+    (SELECT cliente_id FROM contratos WHERE id = v_contrato_id),
+    jsonb_build_object('contrato_id', v_contrato_id, 'tipo', 'engenharia')
+  );
+END $$;
+
+-- Card Marcenaria (Produção)
+DO $$
+DECLARE
+  v_coluna_id uuid;
+  v_contrato_id uuid;
+BEGIN
+  SELECT kc.id INTO v_coluna_id
+  FROM kanban_colunas kc
+  JOIN kanban_boards kb ON kb.id = kc.board_id
+  WHERE kb.ambiente = 'marcenaria' AND kc.titulo = 'Produção';
+
+  SELECT id INTO v_contrato_id FROM contratos WHERE numero = 'MAR-2025-001';
+
+  INSERT INTO kanban_cards (
+    id, coluna_id, titulo, descricao, valor, posicao,
+    entity_id, dados
+  ) VALUES (
+    gen_random_uuid(),
+    v_coluna_id,
+    'Móveis Planejados Sala e Cozinha',
+    'Cliente: Pedro Oliveira - Em produção na marcenaria',
+    45000.00,
+    0,
+    (SELECT cliente_id FROM contratos WHERE id = v_contrato_id),
+    jsonb_build_object('contrato_id', v_contrato_id, 'tipo', 'marcenaria')
+  );
+END $$;
+
+-- ========================================
+-- COMMIT
+-- ========================================
+
+COMMIT;
+
+-- Comentário
+COMMENT ON TABLE kanban_boards IS 'Boards do sistema Kanban incluindo arquitetura, engenharia e marcenaria';
