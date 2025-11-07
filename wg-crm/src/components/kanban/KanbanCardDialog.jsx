@@ -26,6 +26,8 @@ const KanbanCardDialog = ({ card, boardId, columns = [], open, onOpenChange, onU
   const [responsibleUser, setResponsibleUser] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedColumnId, setSelectedColumnId] = useState(null);
+  const [selectedClientId, setSelectedClientId] = useState(null);
+  const [clients, setClients] = useState([]);
 
   // Local state for form fields to prevent re-render issues
   const [formState, setFormState] = useState({ titulo: '', descricao: '' });
@@ -35,6 +37,13 @@ const KanbanCardDialog = ({ card, boardId, columns = [], open, onOpenChange, onU
   };
 
   const fetchCardData = useCallback(async () => {
+    // Buscar lista de clientes (sempre, para modo criação e edição)
+    const { data: clientsData } = await supabase
+      .from('entities')
+      .select('id, nome')
+      .order('nome');
+    setClients(clientsData || []);
+
     if (!card?.id) {
       // Modo de criação: novo card
       setLoading(false);
@@ -43,6 +52,7 @@ const KanbanCardDialog = ({ card, boardId, columns = [], open, onOpenChange, onU
       setComments([]);
       setChecklist([]);
       setResponsibleUser(null);
+      setSelectedClientId(null);
       // Selecionar primeira coluna por padrão
       if (columns.length > 0) {
         setSelectedColumnId(columns[0].id);
@@ -70,6 +80,7 @@ const KanbanCardDialog = ({ card, boardId, columns = [], open, onOpenChange, onU
       titulo: cardData.titulo || '',
       descricao: cardData.descricao || '',
     });
+    setSelectedClientId(cardData.entity_id || null);
 
     const payload = cardData.payload || {};
     setComments(payload.comments || []);
@@ -123,7 +134,7 @@ const KanbanCardDialog = ({ card, boardId, columns = [], open, onOpenChange, onU
         p_coluna_id: selectedColumnId,
         p_titulo: formState.titulo,
         p_descricao: formState.descricao || null,
-        p_cliente_id: null,  // Por enquanto sem cliente
+        p_cliente_id: selectedClientId,  // Usar cliente selecionado
         p_payload: {}
       });
 
@@ -142,7 +153,8 @@ const KanbanCardDialog = ({ card, boardId, columns = [], open, onOpenChange, onU
         p_card_id: card.id,
         p_dados: {
           titulo: formState.titulo,
-          descricao: formState.descricao
+          descricao: formState.descricao,
+          entity_id: selectedClientId || null
         }
       });
 
@@ -258,6 +270,23 @@ const KanbanCardDialog = ({ card, boardId, columns = [], open, onOpenChange, onU
                   onChange={(e) => handleFormChange('descricao', e.target.value)}
                   rows={4}
                 />
+              </section>
+
+              <section>
+                <Label htmlFor="client-select" className="text-lg font-semibold mb-3 block">Cliente (opcional)</Label>
+                <Select value={selectedClientId || undefined} onValueChange={(value) => setSelectedClientId(value === 'none' ? null : value)}>
+                  <SelectTrigger id="client-select">
+                    <SelectValue placeholder="Nenhum cliente vinculado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {clients.map(client => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </section>
 
               {!card?.id && (

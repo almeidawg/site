@@ -15,7 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const OportunidadeCard = ({ card, onEditClient, onCardDeleted, onCardUpdated }) => {
+const OportunidadeCard = ({ card, onCardClick, onEditClient, onCreateClient, onCardDeleted, onCardUpdated }) => {
   const { toast } = useToast();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(card.titulo);
@@ -89,18 +89,21 @@ const OportunidadeCard = ({ card, onEditClient, onCardDeleted, onCardUpdated }) 
           </h3>
         )}
         <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity ml-2">
-          {card.entity_id && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (card.entity_id) {
                 onEditClient(card.entity_id);
-              }}
-              className="text-gray-400 hover:text-blue-500 p-1"
-              title="Editar Cliente"
-            >
-              <Edit size={16} />
-            </button>
-          )}
+              } else {
+                // Abrir formulário para criar novo cliente e vincular
+                onCreateClient(card);
+              }
+            }}
+            className="text-gray-400 hover:text-blue-500 p-1"
+            title={card.entity_id ? "Editar Cliente" : "Criar e Vincular Cliente"}
+          >
+            <Edit size={16} />
+          </button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button

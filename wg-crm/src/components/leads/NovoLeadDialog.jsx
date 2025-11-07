@@ -12,10 +12,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link2, Copy, Building, User, Search, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const NovoLeadDialog = ({ open, onOpenChange, leads, setLeads, leadToEdit }) => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     tipo_pessoa: 'pf',
     nome: '',
@@ -120,20 +122,75 @@ const NovoLeadDialog = ({ open, onOpenChange, leads, setLeads, leadToEdit }) => 
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.nome) {
       toast({ title: "Campo obrigatório", description: "O nome é obrigatório.", variant: "destructive" });
       return;
     }
+
+    setIsSaving(true);
+
+    // Preparar dados para salvar no Supabase
+    // Schema real: id, tipo, nome, email, telefone, cpf_cnpj, endereco, cidade, estado, cep, dados (jsonb), ativo, created_at, updated_at
+    const entityData = {
+      tipo: 'cliente', // Obrigatório: tipo de entidade (cliente, fornecedor, colaborador)
+      nome: formData.nome,
+      cpf_cnpj: formData.cpf_cnpj || null,
+      email: formData.email || null,
+      telefone: formData.telefone || null,
+      cep: formData.cep || null,
+      endereco: formData.logradouro || null,
+      cidade: formData.cidade || null,
+      estado: formData.estado || null,
+      // Campos extras armazenados no JSONB 'dados'
+      dados: {
+        tipo_pessoa: formData.tipo_pessoa === 'pj' ? 'juridica' : 'fisica',
+        numero: formData.numero || null,
+        complemento: formData.complemento || null,
+        bairro: formData.bairro || null,
+        origem: formData.origem || null,
+        empresa: formData.empresa || null, // Nome fantasia para PJ
+      },
+    };
+
     if (isEditing) {
-      setLeads(leads.map(l => l.id === leadToEdit.id ? { ...l, ...formData } : l));
+      // Atualizar cliente existente
+      const { data, error } = await supabase
+        .from('entities')
+        .update(entityData)
+        .eq('id', leadToEdit.id)
+        .select()
+        .single();
+
+      setIsSaving(false);
+
+      if (error) {
+        toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" });
+        return;
+      }
+
       toast({ title: "Registro atualizado!", description: "Os dados do cliente foram atualizados com sucesso." });
+      setLeads(data); // Passa cliente atualizado
     } else {
-      const newLead = { ...formData, id: `lead-${Date.now()}`, status: 'novo', data_criacao: new Date().toISOString() };
-      setLeads([newLead, ...leads]);
+      // Criar novo cliente
+      const { data, error } = await supabase
+        .from('entities')
+        .insert([entityData])
+        .select()
+        .single();
+
+      setIsSaving(false);
+
+      if (error) {
+        toast({ title: "Erro ao criar", description: error.message, variant: "destructive" });
+        return;
+      }
+
       toast({ title: "Novo registro criado!", description: "O lead/cliente foi adicionado com sucesso." });
+      setLeads(data); // Passa cliente criado para callback
     }
+
     onOpenChange(false);
   };
   
@@ -259,8 +316,11 @@ const NovoLeadDialog = ({ open, onOpenChange, leads, setLeads, leadToEdit }) => 
               {renderFormFields()}
 
               <div className="flex justify-end gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button type="submit" className="gradient-primary text-white">{isEditing ? 'Salvar Alterações' : 'Criar Registro'}</Button>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancelar</Button>
+                <Button type="submit" className="gradient-primary text-white" disabled={isSaving}>
+                  {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSaving ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Criar Registro')}
+                </Button>
               </div>
             </form>
           </TabsContent>

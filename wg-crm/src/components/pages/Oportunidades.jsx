@@ -395,7 +395,15 @@ const Oportunidades = () => {
           </div>
         </DragDropContext>
       </div>
-      <NovaOportunidadeDialog open={dialogOpen} onOpenChange={setDialogOpen} setOportunidades={setOportunidades} oportunidadeToEdit={oportunidadeToEdit} users={users} clientes={entities.filter(e => e.tipo === 'cliente')} />
+      <NovaOportunidadeDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        setOportunidades={setOportunidades}
+        oportunidadeToEdit={oportunidadeToEdit}
+        users={users}
+        clientes={entities.filter(e => e.tipo === 'cliente')}
+        onClientCreated={fetchEntities}
+      />
     </div>;
 };
 export default Oportunidades;

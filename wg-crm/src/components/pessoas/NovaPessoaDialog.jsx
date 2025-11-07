@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit }) => {
+const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit, onClientCreated }) => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -160,7 +160,7 @@ const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit }) => 
       const newId = `ent_${Date.now()}`;
       const newEntity = { ...formData, id: newId };
       setEntities(prev => [newEntity, ...prev]);
-      
+
       if (newEntity.tipo === 'cliente') {
         const newOportunidade = {
           id: `op-${Date.now()}`,
@@ -174,11 +174,16 @@ const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit }) => 
         };
         setOportunidades(prev => [newOportunidade, ...prev]);
         toast({ title: "Sucesso!", description: "Novo cliente e oportunidade criados." });
+
+        // Chamar callback para refetch dos clientes do banco
+        if (onClientCreated) {
+          onClientCreated();
+        }
       } else {
         toast({ title: "Sucesso!", description: `Novo ${newEntity.tipo} cadastrado.` });
       }
     }
-    
+
     onOpenChange(false);
   };
 

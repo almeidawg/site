@@ -25,7 +25,7 @@ const servicosDisponiveis = [
   { id: 'marcenaria', label: 'Marcenaria', icon: Hammer },
 ];
 
-const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportunidadeToEdit, users, clientes }) => {
+const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportunidadeToEdit, users, clientes, onClientCreated }) => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [entities, setEntities] = useLocalStorage('crm_entities', []);
@@ -48,7 +48,7 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportuni
       setFormData({
         nome: oportunidadeToEdit.nome || '',
         cliente_id: oportunidadeToEdit.cliente_id || '',
-        cliente_nome: cliente ? (cliente.nome_razao_social) : 'Cliente não encontrado',
+        cliente_nome: cliente ? (cliente.nome_razao_social || cliente.nome) : 'Cliente não encontrado',
         valor_previsto: oportunidadeToEdit.valor_previsto || '',
         responsavel_id: oportunidadeToEdit.responsavel_id || '',
         servicos_contratados: oportunidadeToEdit.servicos_contratados || [],
@@ -67,10 +67,10 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportuni
   const handleSelectChange = (id, value) => {
     if (id === 'cliente_id') {
         const cliente = clientes.find(c => c.id === value);
-        setFormData(prev => ({ 
-            ...prev, 
+        setFormData(prev => ({
+            ...prev,
             cliente_id: value,
-            cliente_nome: cliente ? (cliente.nome_razao_social) : ''
+            cliente_nome: cliente ? (cliente.nome_razao_social || cliente.nome) : ''
         }));
     } else {
         setFormData(prev => ({ ...prev, [id]: value }));
@@ -79,6 +79,13 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportuni
   
   const handleServiceToggle = (services) => {
     setFormData(prev => ({ ...prev, servicos_contratados: services }));
+  };
+
+  const handleClientCreated = () => {
+    // Refetch clients from database
+    if (onClientCreated) {
+      onClientCreated();
+    }
   };
 
   const handleSubmit = (e) => {
@@ -109,7 +116,7 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportuni
       setOportunidades(prev => [...prev, newOportunidade]);
       toast({ title: "Sucesso!", description: "Nova oportunidade criada." });
     }
-    
+
     onOpenChange(false);
   };
 
@@ -138,7 +145,7 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportuni
                     </SelectTrigger>
                     <SelectContent>
                     {clientes.map(cliente => (
-                        <SelectItem key={cliente.id} value={cliente.id}>{cliente.nome_razao_social}</SelectItem>
+                        <SelectItem key={cliente.id} value={cliente.id}>{cliente.nome_razao_social || cliente.nome}</SelectItem>
                     ))}
                     </SelectContent>
                 </Select>
@@ -189,10 +196,11 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportuni
         </form>
       </DialogContent>
     </Dialog>
-    <NovaPessoaDialog 
+    <NovaPessoaDialog
         open={novoClienteDialogOpen}
         onOpenChange={setNovoClienteDialogOpen}
         setEntities={setEntities}
+        onClientCreated={handleClientCreated}
     />
     </>
   );

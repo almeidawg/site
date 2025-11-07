@@ -20,6 +20,7 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
   const [clientToEdit, setClientToEdit] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
+  const [cardToLinkClient, setCardToLinkClient] = useState(null); // Card esperando vinculação de cliente
 
   const { toast } = useToast();
 
@@ -94,7 +95,45 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
       return;
     }
     setClientToEdit(data);
+    setCardToLinkClient(null); // Limpa vinculação pendente
     setIsEditClientDialogOpen(true);
+  }
+
+  const handleCreateClientForCard = (card) => {
+    setClientToEdit(null); // Modo criação
+    setCardToLinkClient(card); // Guarda card para vincular
+    setIsEditClientDialogOpen(true);
+  }
+
+  const handleClientSaved = async (updatedLeadsOrClient) => {
+    // NovoLeadDialog pode passar array (legado) ou objeto único (novo)
+    let savedClient = null;
+
+    if (Array.isArray(updatedLeadsOrClient)) {
+      // Legado: array de leads (pega o primeiro, que é o mais recente)
+      savedClient = updatedLeadsOrClient[0];
+    } else {
+      // Novo: objeto único
+      savedClient = updatedLeadsOrClient;
+    }
+
+    // Se há card esperando vinculação, vincular agora
+    if (cardToLinkClient && savedClient?.id) {
+      const { error } = await supabase.rpc('api_atualizar_card_kanban', {
+        p_card_id: cardToLinkClient.id,
+        p_dados: { entity_id: savedClient.id }
+      });
+
+      if (error) {
+        toast({ title: 'Erro ao vincular cliente ao card', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Cliente vinculado com sucesso!' });
+      }
+      setCardToLinkClient(null);
+    }
+
+    // Refetch para atualizar dados
+    fetchBoardData();
   }
 
   const onDragEnd = async (result) => {
@@ -170,7 +209,9 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
                             >
                               <OportunidadeCard
                                 card={card}
+                                onCardClick={handleCardClick}
                                 onEditClient={handleEditClient}
+                                onCreateClient={handleCreateClientForCard}
                                 onCardDeleted={handleCardDeleted}
                                 onCardUpdated={fetchBoardData}
                               />
@@ -206,15 +247,13 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
         onUpdate={fetchBoardData}
       />
 
-      {clientToEdit && (
-         <NovoLeadDialog
-            open={isEditClientDialogOpen}
-            onOpenChange={setIsEditClientDialogOpen}
-            leadToEdit={clientToEdit}
-            leads={cards.map(c => c.cliente)}
-            setLeads={() => fetchBoardData()} // Simplificado para refetch
-         />
-      )}
+      <NovoLeadDialog
+         open={isEditClientDialogOpen}
+         onOpenChange={setIsEditClientDialogOpen}
+         leadToEdit={clientToEdit}
+         leads={cards.map(c => c.cliente)}
+         setLeads={handleClientSaved}
+      />
     </>
   );
 };

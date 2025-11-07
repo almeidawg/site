@@ -20,6 +20,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Contratos = () => {
   const [contratos, setContratos] = useLocalStorage('crm_contratos', []);
@@ -28,8 +34,15 @@ const Contratos = () => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [contratoToDelete, setContratoToDelete] = useState(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [contratoParaVisualizar, setContratoParaVisualizar] = useState(null);
+  const [visualizarDialogOpen, setVisualizarDialogOpen] = useState(false);
   const pdfRef = useRef();
   const { toast } = useToast();
+
+  const handleVisualizarContrato = (contrato) => {
+    setContratoParaVisualizar(contrato);
+    setVisualizarDialogOpen(true);
+  };
 
   const handleNotImplemented = () => {
     toast({
@@ -192,7 +205,7 @@ const Contratos = () => {
                       <span className={cn('inline-block px-3 py-1 text-xs font-medium rounded-full', tagClass)}>
                         {getTipoContratoLabel(contrato.tipoContrato)}
                       </span>
-                      <Button variant="ghost" size="icon" onClick={handleNotImplemented}>
+                      <Button variant="ghost" size="icon" onClick={() => handleVisualizarContrato(contrato)}>
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleGeneratePdf(contrato)} disabled={isGeneratingPdf && contratoParaPdf?.id === contrato.id}>
@@ -214,8 +227,27 @@ const Contratos = () => {
           onOpenChange={setDialogOpen}
           setContratos={setContratos}
         />
+
+        <Dialog open={visualizarDialogOpen} onOpenChange={setVisualizarDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Visualizar Contrato - {contratoParaVisualizar?.targetName}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              {contratoParaVisualizar && (
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="transform scale-90 origin-top">
+                    <ContratoPDF contrato={contratoParaVisualizar} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-      
+
       {contratoParaPdf && (
         <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
           <ContratoPDF ref={pdfRef} contrato={contratoParaPdf} />
