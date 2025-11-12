@@ -1,0 +1,6 @@
+﻿html, body { background:#ffffff !important; }
+.dropdown-menu, [role="menu"], .user-menu, .menu, .menu-content { background:#ffffff !important; }
+.bg-warning, .alert-warning, .badge-warning, [class*="bg-yellow"] { background:#ffffff !important; color:#222 !important; border-color:transparent !important; }
+html::before, html::after, body::before, body::after { background:transparent !important; border:0 !important; outline:none !important; }
+.accent-bar, .right-bar, .side-accent, [class*="barra"], [class*="accent"] { background:transparent !important; border:0 !important; display:none !important; }
+:root { --warning:#ffffff !important; --warning-bg:#ffffff !important; --color-warning:#ffffff !important; }
