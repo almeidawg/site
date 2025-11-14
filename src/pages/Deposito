@@ -1,0 +1,30 @@
+import React from 'react';
+
+const Deposito = () => {
+  return (
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-bold tracking-tight">Depósito</h1>
+      <p className="text-muted-foreground">
+        Módulo de controle de entrada e saída de materiais e ferramentas do Grupo WG Almeida.
+      </p>
+
+      <div className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+        <p>
+          Aqui vamos integrar:
+        </p>
+        <ul className="list-disc pl-5 mt-2 space-y-1">
+          <li>Entradas de materiais (compras, devoluções, ajustes)</li>
+          <li>Saídas para obras, marcenaria e assistência</li>
+          <li>Controle de ferramentas (empréstimo/devolução)</li>
+          <li>Estoque mínimo e alertas</li>
+          <li>Visão de custos integrada ao financeiro</li>
+        </ul>
+        <p className="mt-3">
+          Por enquanto esta é uma versão base. Na próxima etapa conectamos com o Supabase e criamos os formulários.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default Deposito;

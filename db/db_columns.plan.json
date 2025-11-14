@@ -1,0 +1,10 @@
+[
+  { "schema": "public", "table": "projects",              "column": "owner_id",                "type": "uuid",    "nullable": true,  "default": null },
+  { "schema": "public", "table": "fornecedores",          "column": "pessoa_id",               "type": "uuid",    "nullable": true,  "default": null },
+  { "schema": "public", "table": "fornecedores",          "column": "default_bank_account_id", "type": "uuid",    "nullable": true,  "default": null },
+  { "schema": "public", "table": "fornecedores_pessoas",  "column": "fornecedor_id",           "type": "uuid",    "nullable": false, "default": null },
+  { "schema": "public", "table": "fornecedores_pessoas",  "column": "pessoa_id",               "type": "uuid",    "nullable": true,  "default": null },
+  { "schema": "public", "table": "fornecedores_pessoas",  "column": "cargo_id",                "type": "uuid",    "nullable": true,  "default": null },
+  { "schema": "public", "table": "kanban_colunas",        "column": "board_id",                "type": "uuid",    "nullable": false, "default": null },
+  { "schema": "public", "table": "kanban_cards",          "column": "coluna_id",               "type": "uuid",    "nullable": false, "default": null }
+]
