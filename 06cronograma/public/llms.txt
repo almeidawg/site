@@ -1,6 +1,0 @@
-## Pages
-- [- WGEasy Cronograma](/projectdetail): No description available
-- [Acesso - WGEasy Cronograma](/auth): No description available
-- [Dashboard - WGEasy Cronograma](/dashboard): Visão geral dos seus projetos e cronogramas de obra
-- [Equipes - WGEasy Cronograma](/teams): Gerencie equipes e calendários de trabalho
-- [Projetos - WGEasy Cronograma](/projects): Gerencie todos os seus projetos de obra

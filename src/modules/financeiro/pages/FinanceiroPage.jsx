@@ -1,170 +1,296 @@
 // src/modules/financeiro/pages/FinanceiroPage.jsx
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import {
-  getResumoFinanceiro,
-  listarPagamentos,
-  criarPagamento,
-  removerPagamento,
+  listarLancamentos,
+  removerLancamento,
+  listarCategorias,
+  listarObras,
 } from "../services/financeiroService";
+import NovoLancamentoDialog from "../components/NovoLancamentoDialog";
 
 export default function FinanceiroPage() {
-  const { projetoId } = useParams();
+  const [lancamentos, setLancamentos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [obras, setObras] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  const [resumo, setResumo] = useState(null);
-  const [pagamentos, setPagamentos] = useState([]);
-  const [valor, setValor] = useState("");
-  const [tipo, setTipo] = useState("entrada");
-  const [categoria, setCategoria] = useState("");
-  const [obs, setObs] = useState("");
+  // Filtros
+  const [searchText, setSearchText] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterProject, setFilterProject] = useState("");
 
   async function carregar() {
-    const r = await getResumoFinanceiro(projetoId);
-    setResumo(r);
+    setLoading(true);
+    try {
+      const filters = {};
+      if (searchText) filters.searchText = searchText;
+      if (filterType) filters.type = filterType;
+      if (filterProject) filters.projectId = filterProject;
 
-    const p = await listarPagamentos(projetoId);
-    setPagamentos(p);
+      const [lancamentosData, categoriasData, obrasData] = await Promise.all([
+        listarLancamentos(filters),
+        listarCategorias(),
+        listarObras(),
+      ]);
+
+      setLancamentos(lancamentosData);
+      setCategorias(categoriasData);
+      setObras(obrasData);
+    } catch (err) {
+      console.error("Erro ao carregar financeiro:", err);
+      alert("Erro ao carregar dados financeiros");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function adicionarPagamento(e) {
-    e.preventDefault();
+  async function handleExcluir(id) {
+    if (!confirm("Deseja realmente excluir este lançamento?")) return;
 
-    await criarPagamento({
-      projeto_id: projetoId,
-      valor: Number(valor),
-      tipo,
-      categoria,
-      observacao: obs,
-    });
-
-    setValor("");
-    setObs("");
-    carregar();
+    try {
+      await removerLancamento(id);
+      carregar();
+    } catch (err) {
+      console.error("Erro ao excluir:", err);
+      alert("Erro ao excluir lançamento");
+    }
   }
 
-  async function excluir(id) {
-    await removerPagamento(id);
-    carregar();
+  function handleNovo() {
+    setDialogOpen(true);
+  }
+
+  function handleDialogClose(saved) {
+    setDialogOpen(false);
+    if (saved) carregar();
   }
 
   useEffect(() => {
     carregar();
-  }, [projetoId]);
+  }, []);
 
-  if (!resumo)
-    return <div className="p-6 text-slate-600">Carregando financeiro…</div>;
+  // Calcular resumo
+  const resumo = lancamentos.reduce(
+    (acc, item) => {
+      const valor = Number(item.amount) || 0;
+      if (item.type === "income") {
+        acc.receitas += valor;
+      } else if (item.type === "expense") {
+        acc.despesas += valor;
+      }
+      return acc;
+    },
+    { receitas: 0, despesas: 0 }
+  );
+  resumo.saldo = resumo.receitas - resumo.despesas;
+
+  if (loading) {
+    return (
+      <div className="p-6 text-slate-600">Carregando lançamentos financeiros...</div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
       {/* Cabeçalho */}
-      <h1 className="text-2xl font-semibold text-slate-900">
-        Financeiro da Obra
-      </h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Financeiro - Lançamentos
+        </h1>
+        <button
+          onClick={handleNovo}
+          className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition"
+        >
+          + Novo Lançamento
+        </button>
+      </div>
 
-      {/* Resumo */}
-      <div className="grid md:grid-cols-4 gap-4">
+      {/* Cards de Resumo */}
+      <div className="grid md:grid-cols-3 gap-4">
         <div className="p-4 border rounded-xl bg-white shadow-sm">
-          <p className="text-xs text-slate-500">Contrato Total</p>
-          <p className="text-xl font-bold">
-            R$ {resumo.contrato_total.toLocaleString("pt-BR")}
+          <p className="text-xs text-slate-500 uppercase">Total Receitas</p>
+          <p className="text-2xl font-bold text-emerald-600">
+            {resumo.receitas.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })}
           </p>
         </div>
 
         <div className="p-4 border rounded-xl bg-white shadow-sm">
-          <p className="text-xs text-slate-500">Executado (Cronograma)</p>
-          <p className="text-xl font-bold text-emerald-700">
-            R$ {resumo.executado_cronograma.toLocaleString("pt-BR")}
+          <p className="text-xs text-slate-500 uppercase">Total Despesas</p>
+          <p className="text-2xl font-bold text-red-600">
+            {resumo.despesas.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })}
           </p>
         </div>
 
         <div className="p-4 border rounded-xl bg-white shadow-sm">
-          <p className="text-xs text-slate-500">Entradas</p>
-          <p className="text-xl font-bold text-blue-700">
-            R$ {resumo.entradas.toLocaleString("pt-BR")}
-          </p>
-        </div>
-
-        <div className="p-4 border rounded-xl bg-white shadow-sm">
-          <p className="text-xs text-slate-500">Saídas</p>
-          <p className="text-xl font-bold text-red-700">
-            R$ {resumo.saidas.toLocaleString("pt-BR")}
+          <p className="text-xs text-slate-500 uppercase">Saldo</p>
+          <p
+            className={`text-2xl font-bold ${
+              resumo.saldo >= 0 ? "text-blue-600" : "text-orange-600"
+            }`}
+          >
+            {resumo.saldo.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })}
           </p>
         </div>
       </div>
 
-      {/* Formulário */}
-      <form
-        onSubmit={adicionarPagamento}
-        className="p-4 border rounded-xl bg-white shadow space-y-3"
-      >
-        <h2 className="text-sm font-semibold text-slate-700">
-          Novo lançamento
-        </h2>
-
+      {/* Filtros */}
+      <div className="p-4 border rounded-xl bg-white shadow-sm">
         <div className="grid md:grid-cols-4 gap-3">
           <input
-            type="number"
-            placeholder="Valor"
-            className="border p-2 rounded"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            required
+            type="text"
+            placeholder="Buscar descrição..."
+            className="border p-2 rounded text-sm"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
           />
+
           <select
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
-            className="border p-2 rounded"
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="border p-2 rounded text-sm"
           >
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
+            <option value="">Todos os tipos</option>
+            <option value="income">Receitas</option>
+            <option value="expense">Despesas</option>
           </select>
-          <input
-            type="text"
-            placeholder="Categoria"
-            className="border p-2 rounded"
-            value={categoria}
-            onChange={(e) => setCategoria(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Observação"
-            className="border p-2 rounded"
-            value={obs}
-            onChange={(e) => setObs(e.target.value)}
-          />
-        </div>
 
-        <button className="bg-slate-900 text-white px-4 py-2 rounded-lg">
-          Registrar
-        </button>
-      </form>
-
-      {/* Lista de pagamentos */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-slate-700">Lançamentos</h2>
-
-        {pagamentos.map((p) => (
-          <div
-            key={p.id}
-            className="p-3 border rounded-lg bg-white shadow-sm flex justify-between"
+          <select
+            value={filterProject}
+            onChange={(e) => setFilterProject(e.target.value)}
+            className="border p-2 rounded text-sm"
           >
-            <div>
-              <p className="font-semibold">
-                R$ {Number(p.valor).toLocaleString("pt-BR")}
-              </p>
-              <p className="text-xs text-slate-500">{p.categoria}</p>
-              <p className="text-xs text-slate-400">{p.observacao}</p>
-            </div>
+            <option value="">Todas as obras</option>
+            {obras.map((obra) => (
+              <option key={obra.id} value={obra.id}>
+                {obra.nome}
+              </option>
+            ))}
+          </select>
 
-            <button
-              onClick={() => excluir(p.id)}
-              className="text-red-600 text-xs"
-            >
-              excluir
-            </button>
-          </div>
-        ))}
+          <button
+            onClick={carregar}
+            className="bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded text-sm font-medium transition"
+          >
+            Filtrar
+          </button>
+        </div>
       </div>
+
+      {/* Tabela de Lançamentos */}
+      <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-100 border-b">
+            <tr>
+              <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                Data
+              </th>
+              <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                Descrição
+              </th>
+              <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                Tipo
+              </th>
+              <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                Obra
+              </th>
+              <th className="px-4 py-3 text-left font-semibold text-slate-700">
+                Categoria
+              </th>
+              <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                Valor
+              </th>
+              <th className="px-4 py-3 text-center font-semibold text-slate-700">
+                Ações
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {lancamentos.map((item) => (
+              <tr key={item.id} className="border-b hover:bg-slate-50">
+                <td className="px-4 py-3">
+                  {item.occurred_at
+                    ? new Date(item.occurred_at).toLocaleDateString("pt-BR")
+                    : "-"}
+                </td>
+                <td className="px-4 py-3">{item.description || "-"}</td>
+                <td className="px-4 py-3">
+                  {item.type === "income" ? (
+                    <span className="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded font-medium">
+                      Receita
+                    </span>
+                  ) : item.type === "expense" ? (
+                    <span className="inline-block px-2 py-1 bg-red-100 text-red-700 text-xs rounded font-medium">
+                      Despesa
+                    </span>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+                <td className="px-4 py-3 text-slate-600">
+                  {item.project?.nome || "-"}
+                </td>
+                <td className="px-4 py-3 text-slate-600">
+                  {item.category?.name || "-"}
+                </td>
+                <td
+                  className={`px-4 py-3 text-right font-semibold ${
+                    item.type === "income" ? "text-emerald-700" : "text-red-700"
+                  }`}
+                >
+                  {typeof item.amount === "number"
+                    ? item.amount.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })
+                    : "-"}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => handleExcluir(item.id)}
+                    className="text-red-600 hover:text-red-800 text-xs font-medium"
+                  >
+                    Excluir
+                  </button>
+                </td>
+              </tr>
+            ))}
+
+            {!lancamentos.length && (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  Nenhum lançamento encontrado.
+                  <br />
+                  <button
+                    onClick={handleNovo}
+                    className="mt-2 text-slate-900 underline"
+                  >
+                    Criar primeiro lançamento
+                  </button>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Dialog de Novo Lançamento */}
+      {dialogOpen && (
+        <NovoLancamentoDialog
+          onClose={handleDialogClose}
+          categorias={categorias}
+          obras={obras}
+        />
+      )}
     </div>
   );
 }

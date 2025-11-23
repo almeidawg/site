@@ -1,0 +1,35 @@
+{
+  "name": "sync-manager",
+  "version": "1.0.0",
+  "description": "Sistema de sincronização de apps low-code para React local",
+  "type": "module",
+  "scripts": {
+    "sync:snapshot": "node scripts/snapshot.js",
+    "sync:diff": "node scripts/diff.js",
+    "sync:analyze": "node scripts/analyze.js",
+    "sync:apply": "node scripts/apply.js",
+    "sync:rollback": "node scripts/rollback.js",
+    "sync:stats": "node scripts/stats.js",
+    "migrate:analyze": "node scripts/migrate-analyze.js",
+    "migrate:table": "node scripts/migrate-table.js",
+    "migrate:storage": "node scripts/migrate-storage.js",
+    "migrate:all": "node scripts/migrate-all.js",
+    "setup": "node scripts/setup.js"
+  },
+  "keywords": ["sync", "migration", "low-code", "diff"],
+  "author": "Valdair",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "diff": "^5.1.0",
+    "fs-extra": "^11.2.0",
+    "glob": "^10.3.10",
+    "ora": "^8.0.1",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  }
+}

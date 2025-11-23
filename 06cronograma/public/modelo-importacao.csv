@@ -1,4 +1,0 @@
-name,category,type,unit,productivity,setup_days,value,trade,image_url
-"Piso Porcelanato 90x90","Pisos","Produto","m2",15,0.5,89.90,"Pedreiro","https://exemplo.com/piso.jpg"
-"Instalação Ponto Elétrico","Elétrica","Serviço","un",8,0.2,150.00,"Eletricista",""
-"Demolição de Alvenaria","Demolições","Serviço","m2",10,0,55.00,"Servente",""

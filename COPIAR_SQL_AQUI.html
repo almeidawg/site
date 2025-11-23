@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Correto para Copiar</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .header {
+            background: #ff4444;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .sql-container {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #4CAF50;
+            position: relative;
+        }
+        pre {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .copy-btn:hover {
+            background: #45a049;
+        }
+        .copy-btn:active {
+            background: #3d8b40;
+        }
+        .success-msg {
+            display: none;
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .instructions {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 10px 0;
+        }
+        a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚠️ SQL CORRETO PARA CORRIGIR A VIEW</h1>
+        <p>Copie EXATAMENTE este SQL e cole no Supabase SQL Editor</p>
+    </div>
+
+    <div class="instructions">
+        <h2>📋 Instruções Passo a Passo:</h2>
+        <ol>
+            <li><strong>Clique no botão verde "COPIAR SQL"</strong> abaixo</li>
+            <li><strong>Abra o Supabase SQL Editor:</strong> <a href="https://supabase.com/dashboard/project/ahlqzzkxuutwoepirpzr/sql/new" target="_blank">Clique aqui para abrir</a></li>
+            <li><strong>DELETE todo o conteúdo</strong> que estiver no editor</li>
+            <li><strong>COLE</strong> o SQL que você copiou (Ctrl+V)</li>
+            <li><strong>EXECUTE</strong> pressionando Ctrl+Enter ou clicando em "Run"</li>
+        </ol>
+    </div>
+
+    <div class="sql-container">
+        <button class="copy-btn" onclick="copiarSQL()">📋 COPIAR SQL</button>
+        <pre id="sqlCode">-- ===================================================================
+-- CORREÇÃO FINAL DA VIEW v_kanban_cards_board
+-- ===================================================================
+-- Este script corrige todos os erros encontrados:
+-- 1. Remove referências a colunas inexistentes (b.titulo, k.org_id)
+-- 2. Usa a estrutura correta (cliente_id em vez de org_id)
+-- 3. Remove filtro deleted_at (pode não existir)
+-- ===================================================================
+
+-- PASSO 1: Remover a view antiga completamente
+DROP VIEW IF EXISTS public.v_kanban_cards_board CASCADE;
+
+-- PASSO 2: Criar a view correta
+CREATE VIEW public.v_kanban_cards_board AS
+SELECT
+  -- Board info (prefer board from column, fallback to card's direct board_id)
+  COALESCE(b.id, b2.id) AS board_id,
+  COALESCE(b.nome, b.name, b2.nome, b2.name) AS board_name,
+  -- Column info
+  c.id AS column_id,
+  COALESCE(c.nome, c.name) AS column_title,
+  -- Card info
+  k.id AS card_id,
+  k.titulo AS card_title,
+  k.ordem AS card_pos,
+  k.descricao AS card_description,
+  k.cliente_id AS card_org_id,
+  k.due_date,
+  k.status,
+  k.payload AS metadata,
+  k.valor_proposta
+FROM public.kanban_cards k
+-- Join com coluna (se existir)
+LEFT JOIN public.kanban_colunas c ON c.id = k.coluna_id
+-- Join com board via coluna
+LEFT JOIN public.kanban_boards b ON b.id = c.board_id
+-- Join com board direto do card (fallback)
+LEFT JOIN public.kanban_boards b2 ON b2.id = k.board_id;
+
+COMMENT ON VIEW public.v_kanban_cards_board IS 'Kanban cards joined with boards and columns for dashboards';
+
+-- ===================================================================
+-- FIM DA CORREÇÃO
+-- ===================================================================</pre>
+        <div class="success-msg" id="successMsg">✅ SQL copiado com sucesso! Agora cole no Supabase SQL Editor.</div>
+    </div>
+
+    <script>
+        function copiarSQL() {
+            const sqlCode = document.getElementById('sqlCode').textContent;
+            navigator.clipboard.writeText(sqlCode).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const msg = document.getElementById('successMsg');
+
+                btn.textContent = '✅ COPIADO!';
+                btn.style.background = '#4CAF50';
+                msg.style.display = 'block';
+
+                setTimeout(() => {
+                    btn.textContent = '📋 COPIAR SQL';
+                    btn.style.background = '#4CAF50';
+                }, 3000);
+            }).catch(err => {
+                alert('Erro ao copiar. Selecione o texto manualmente e copie com Ctrl+C');
+            });
+        }
+    </script>
+</body>
+</html>

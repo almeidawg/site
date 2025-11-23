@@ -7,28 +7,33 @@ export default function Sidebar() {
   const menu = [
     { label: "Dashboard", path: "/" },
     { label: "Kanban", path: "/kanban" },
+    { label: "Obras", path: "/obras" },
     { label: "Marcenaria", path: "/marcenaria" },
-    { label: "Financeiro", path: "/financeiro/lancamentos" }
+    { label: "Financeiro", path: "/financeiro" },
+    { label: "Cronograma", path: "/cronograma" },
+    { label: "Contratos", path: "/contratos" },
   ];
 
   return (
     <aside
       style={{
-        width: 220,
+        width: 240,
         backgroundColor: "#0f172a",
         color: "#f1f5f9",
         padding: 20,
         display: "flex",
         flexDirection: "column",
-        gap: 12
+        gap: 8,
+        minHeight: "100vh",
       }}
     >
       <div
         style={{
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: 700,
-          marginBottom: 20,
-          letterSpacing: 1
+          marginBottom: 24,
+          letterSpacing: 1,
+          color: "#fff",
         }}
       >
         WGEasy
@@ -42,13 +47,24 @@ export default function Sidebar() {
             key={item.path}
             to={item.path}
             style={{
-              padding: "10px 12px",
+              padding: "10px 14px",
               borderRadius: 8,
               background: active ? "#1e293b" : "transparent",
               color: active ? "#fff" : "#cbd5e1",
               textDecoration: "none",
               fontSize: 14,
-              fontWeight: active ? 600 : 400
+              fontWeight: active ? 600 : 400,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              if (!active) {
+                e.target.style.background = "#1e293b50";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!active) {
+                e.target.style.background = "transparent";
+              }
             }}
           >
             {item.label}
