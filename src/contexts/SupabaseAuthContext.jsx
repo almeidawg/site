@@ -18,8 +18,8 @@ export const AuthProvider = ({ children }) => {
     }
     
     const [profileRes, orgRes] = await Promise.all([
-      supabase.from('user_profiles').select('*').eq('user_id', user.id).single(),
-      supabase.from('usuarios_perfis').select('org_id').eq('user_id', user.id).single()
+      supabase.from('user_profiles').select('*').eq('user_id', user.id).maybeSingle(),
+      supabase.from('usuarios_perfis').select('org_id').eq('user_id', user.id).maybeSingle()
     ]);
     
     if (profileRes.error && profileRes.error.code !== 'PGRST116') {
