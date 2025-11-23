@@ -41,7 +41,7 @@ const Dashboard = () => {
           
           const { data: cardsData, error: cardsError } = await supabase
             .from('v_kanban_cards_board')
-            .select('payload, modulo, coluna_id, status')
+            .select('board_name, card_title, card_pos, card_description, card_org_id, card_id, column_title, column_id, board_id, due_date, status, metadata, valor_proposta')
             .not('status', 'in', '("concluido", "arquivado")');
 
           if (cardsError) throw cardsError;
@@ -68,21 +68,26 @@ const Dashboard = () => {
 
         if (statsData.cardsData) {
             statsData.cardsData.forEach(card => {
-                const modulo = card.modulo;
-                const cardPayload = typeof card.payload === 'string' ? JSON.parse(card.payload) : card.payload;
-                const valor = parseFloat(cardPayload?.valor_proposta || card.valor_proposta || 0);
+                const boardName = card.board_name?.toLowerCase() || '';
+                const valor = parseFloat(card.valor_proposta || 0);
 
-                if (modulo && newStats[modulo]) {
-                    newStats[modulo].total += 1;
-                    newStats[modulo].valor += valor;
-                }
-                
-                if (modulo === 'oportunidades') {
-                    const nomeColuna = colunaMap[card.coluna_id] || '';
+                if (boardName.includes('oportunidades')) {
+                    newStats.oportunidades.total += 1;
+                    newStats.oportunidades.valor += valor;
+                    const nomeColuna = card.column_title || '';
                     if (nomeColuna.toLowerCase().includes('negocia')) {
                         newStats.negociacao.total += 1;
                         newStats.negociacao.valor += valor;
                     }
+                } else if (boardName.includes('arquitetura')) {
+                    newStats.arquitetura.total += 1;
+                    newStats.arquitetura.valor += valor;
+                } else if (boardName.includes('engenharia')) {
+                    newStats.engenharia.total += 1;
+                    newStats.engenharia.valor += valor;
+                } else if (boardName.includes('marcenaria')) {
+                    newStats.marcenaria.total += 1;
+                    newStats.marcenaria.valor += valor;
                 }
             });
         }

@@ -1,142 +1,86 @@
 
-import React, { createContext, useState, useEffect, useContext, useMemo, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
-import { useNavigate } from 'react-router-dom';
 
-export const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [session, setSession] = useState(null);
-    const [profile, setProfile] = useState(null);
-    const [orgId, setOrgId] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [isFirstLogin, setIsFirstLogin] = useState(false);
-    const navigate = useNavigate();
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [orgId, setOrgId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    const fetchProfileData = useCallback(async (userId, currentSession) => {
-        try {
-            const { data: userProfile, error: profileError } = await supabase
-                .from('usuarios_perfis')
-                .select('*')
-                .eq('user_id', userId)
-                .single();
-
-            if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = no rows returned
-                console.error("Error fetching user profile:", profileError);
-                throw profileError;
-            }
-            
-            setProfile(userProfile);
-            setOrgId(userProfile?.org_id || null);
-
-            const firstLoginCheck = !userProfile || !userProfile.nome || !userProfile.empresa_id;
-            setIsFirstLogin(firstLoginCheck);
-
-            if (userProfile?.org_id && currentSession?.access_token) {
-                // Not strictly necessary for most queries due to RLS, but good for functions
-                await supabase.functions.setAuth(currentSession.access_token);
-            }
-
-        } catch (error) {
-            console.error("Critical error in fetchProfileData:", error.message);
-            setProfile(null);
-            setOrgId(null);
-            setIsFirstLogin(false);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-
-    useEffect(() => {
-        const handleAuthStateChange = async (_event, newSession) => {
-            setLoading(true);
-            setSession(newSession);
-            const currentUser = newSession?.user ?? null;
-            setUser(currentUser);
-
-            if (currentUser) {
-                await fetchProfileData(currentUser.id, newSession);
-            } else {
-                setProfile(null);
-                setOrgId(null);
-                setIsFirstLogin(false);
-                setLoading(false);
-                if (_event === 'SIGNED_OUT') {
-                    navigate('/login', { replace: true });
-                }
-            }
-        };
-        
-        supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-            handleAuthStateChange('INITIAL_SESSION', initialSession);
-        }).catch(err => {
-            console.error("Error on initial getSession:", err);
-            setLoading(false);
-        });
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, [fetchProfileData, navigate]);
-
-    const signIn = async (email, password) => {
-        setLoading(true);
-        // onAuthStateChange will handle the result
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            setLoading(false); // only stop loading on error
-            return { error };
-        }
-        // On success, loading will be set to false inside onAuthStateChange
-        return {};
-    };
-
-
-
-    const signOut = async () => {
-        await supabase.auth.signOut();
-    };
+  const fetchProfileAndOrg = async (user) => {
+    if (!user) {
+      setProfile(null);
+      setOrgId(null);
+      return;
+    }
     
-    const hasRole = useCallback((role) => {
-        if (!profile) return false;
-        if (profile.master) return true;
-        if (Array.isArray(role)) {
-            return role.includes(profile.role);
-        }
-        return profile.role === role;
-    }, [profile]);
+    const [profileRes, orgRes] = await Promise.all([
+      supabase.from('user_profiles').select('*').eq('user_id', user.id).single(),
+      supabase.from('usuarios_perfis').select('org_id').eq('user_id', user.id).single()
+    ]);
     
-    const refreshProfile = useCallback(async () => {
-        if (!user || !session) return;
-        setLoading(true);
-        await fetchProfileData(user.id, session);
-    }, [user, session, fetchProfileData]);
+    if (profileRes.error && profileRes.error.code !== 'PGRST116') {
+      console.error('Error fetching profile:', profileRes.error.message);
+    }
+    setProfile(profileRes.data);
 
+    if (orgRes.error && orgRes.error.code !== 'PGRST116') {
+      console.error('Error fetching org:', orgRes.error.message);
+    }
+    setOrgId(orgRes.data?.org_id || null);
+  };
 
-    const value = {
-        session,
-        user,
-        profile,
-        orgId,
-        loading,
-        isFirstLogin,
-        signIn,
-        signOut,
-        hasRole,
-        refreshProfile,
+  useEffect(() => {
+    const initializeAuth = async () => {
+      setLoading(true);
+      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Error getting session:", error.message);
+      }
+      setSession(currentSession);
+      await fetchProfileAndOrg(currentSession?.user);
+      setLoading(false);
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    initializeAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      setLoading(true);
+      setSession(newSession);
+      await fetchProfileAndOrg(newSession?.user);
+      setLoading(false);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const value = {
+    session,
+    user: session?.user,
+    profile,
+    orgId,
+    loading,
+    signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
+    signUp: (email, password, userData) => supabase.auth.signUp({ 
+      email, 
+      password, 
+      options: { data: userData } 
+    }),
+    signOut: () => supabase.auth.signOut(),
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

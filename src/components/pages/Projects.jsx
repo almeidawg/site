@@ -1,13 +1,15 @@
 
 import React from 'react';
+import EmbeddedPage from './EmbeddedPage';
+import { PROJECTS_DASHBOARD_URL } from '@/config/externalApps';
+
 const Projects = () => {
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold">Projects</h1>
-      <p className="text-muted-foreground mt-2">
-        Este módulo está em desenvolvimento.
-      </p>
-    </div>
+    <EmbeddedPage 
+      src={PROJECTS_DASHBOARD_URL}
+      title="Projects Externo"
+    />
   );
 };
+
 export default Projects;

@@ -1,0 +1,428 @@
+{
+  "modelo_id": "turnkey_wg_premium_v1",
+  "nome": "Modelo A - Turn Key WG Premium",
+  "descricao": "Cronograma padrão WG Almeida para obras turn key integrando Arquitetura, Engenharia e Marcenaria de alto padrão.",
+  "ativo": true,
+  "macrocelulas": [
+    {
+      "id": "ARQ",
+      "nome": "Arquitetura",
+      "ordem": 1,
+      "cor_hex": "#5E9B94"
+    },
+    {
+      "id": "ENG",
+      "nome": "Engenharia",
+      "ordem": 2,
+      "cor_hex": "#2B4580"
+    },
+    {
+      "id": "MAR",
+      "nome": "Marcenaria",
+      "ordem": 3,
+      "cor_hex": "#8B5E3C"
+    }
+  ],
+  "etapas": [
+    {
+      "etapa_codigo": "E01",
+      "slug": "levantamento-tecnico-documental",
+      "macrocelula_id": "ARQ",
+      "ordem": 1,
+      "nome": "Levantamento Técnico e Documental",
+      "descricao": "Medição técnica, coleta de plantas, memorial, normas de condomínio, registro fotográfico e cadastro do imóvel.",
+      "duracao_padrao_dias": 3,
+      "responsavel_padrao": "Arquitetura",
+      "peso_progresso": 0.04,
+      "cor_hex": "#5E9B94",
+      "tipo": "preparacao",
+      "dependencias": [],
+      "tarefas_padrao": [
+        "Solicitar plantas e memorial descritivo à construtora/cliente",
+        "Realizar medição técnica conforme NBR 6492",
+        "Registrar fotos e condições gerais do imóvel",
+        "Cadastrar imóvel e dados básicos no WGEasy"
+      ]
+    },
+    {
+      "etapa_codigo": "E02",
+      "slug": "estudo-preliminar",
+      "macrocelula_id": "ARQ",
+      "ordem": 2,
+      "nome": "Estudo Preliminar",
+      "descricao": "Definição de layout conceitual, setorização, fluxos e validação de briefing com o cliente.",
+      "duracao_padrao_dias": 5,
+      "responsavel_padrao": "Arquitetura",
+      "peso_progresso": 0.05,
+      "cor_hex": "#5E9B94",
+      "tipo": "projeto",
+      "dependencias": ["E01"],
+      "tarefas_padrao": [
+        "Elaborar layout preliminar",
+        "Definir fluxos principais e setorização",
+        "Reunião de alinhamento com cliente",
+        "Registrar aprovação do estudo preliminar no sistema"
+      ]
+    },
+    {
+      "etapa_codigo": "E03",
+      "slug": "anteprojeto-renderizacoes",
+      "macrocelula_id": "ARQ",
+      "ordem": 3,
+      "nome": "Anteprojeto + Renderizações",
+      "descricao": "Planta refinada com layouts atualizados e renderizações estratégicas dos principais ambientes.",
+      "duracao_padrao_dias": 7,
+      "responsavel_padrao": "Arquitetura",
+      "peso_progresso": 0.06,
+      "cor_hex": "#5E9B94",
+      "tipo": "projeto",
+      "dependencias": ["E02"],
+      "tarefas_padrao": [
+        "Ajustar layout com base no estudo preliminar",
+        "Produzir renderizações dos ambientes-chave",
+        "Apresentar anteprojeto ao cliente",
+        "Registrar aceite formal do anteprojeto no WGEasy"
+      ]
+    },
+    {
+      "etapa_codigo": "E04",
+      "slug": "projeto-executivo-arquitetonico",
+      "macrocelula_id": "ARQ",
+      "ordem": 4,
+      "nome": "Projeto Executivo Arquitetônico",
+      "descricao": "Desenvolvimento do projeto executivo completo conforme NBR 6492 e NBR 10068.",
+      "duracao_padrao_dias": 12,
+      "responsavel_padrao": "Arquitetura",
+      "peso_progresso": 0.08,
+      "cor_hex": "#5E9B94",
+      "tipo": "projeto",
+      "dependencias": ["E03"],
+      "tarefas_padrao": [
+        "Plantas técnicas com cotas e níveis",
+        "Cortes, fachadas e elevações",
+        "Detalhamento de áreas molhadas e especiais",
+        "Plantas de pontos elétricos, iluminação e hidráulica"
+      ]
+    },
+    {
+      "etapa_codigo": "E05",
+      "slug": "compatibilizacao-geral",
+      "macrocelula_id": "ARQ",
+      "ordem": 5,
+      "nome": "Compatibilização Arquitetura x Engenharia x Marcenaria",
+      "descricao": "Ajuste final de projeto para evitar interferências entre estrutura, instalações e marcenaria sob medida.",
+      "duracao_padrao_dias": 3,
+      "responsavel_padrao": "Arquitetura",
+      "peso_progresso": 0.07,
+      "cor_hex": "#5E9B94",
+      "tipo": "projeto",
+      "dependencias": ["E04"],
+      "tarefas_padrao": [
+        "Revisar interferências com estrutura e instalações",
+        "Ajustar vãos, sancas e pontos críticos de marcenaria",
+        "Emitir pacote final de arquivos executivos",
+        "Liberar projeto para início de obra no sistema"
+      ]
+    },
+    {
+      "etapa_codigo": "E06",
+      "slug": "mobilizacao-obra",
+      "macrocelula_id": "ENG",
+      "ordem": 6,
+      "nome": "Mobilização de Obra",
+      "descricao": "Preparação do canteiro, comunicação com condomínio, caçamba, EPI, proteções e logística.",
+      "duracao_padrao_dias": 2,
+      "responsavel_padrao": "Engenharia",
+      "peso_progresso": 0.05,
+      "cor_hex": "#2B4580",
+      "tipo": "logistica",
+      "dependencias": ["E05"],
+      "tarefas_padrao": [
+        "Protocolar documentação junto ao condomínio",
+        "Planejar caçambas e fluxo de descarte",
+        "Instalar proteções iniciais de piso e circulação",
+        "Briefing com equipe de obra"
+      ]
+    },
+    {
+      "etapa_codigo": "E07",
+      "slug": "demolicao-preparacao",
+      "macrocelula_id": "ENG",
+      "ordem": 7,
+      "nome": "Demolição e Preparação",
+      "descricao": "Demolições, remoção de revestimentos e limpeza bruta para início de instalações.",
+      "duracao_padrao_dias": 7,
+      "responsavel_padrao": "Engenharia",
+      "peso_progresso": 0.07,
+      "cor_hex": "#2B4580",
+      "tipo": "execucao",
+      "dependencias": ["E06"],
+      "tarefas_padrao": [
+        "Demolição conforme projeto executivo",
+        "Retirada e controle de entulho",
+        "Correção de irregularidades grosseiras",
+        "Atualizar status fotográfico da obra no sistema"
+      ]
+    },
+    {
+      "etapa_codigo": "E08",
+      "slug": "instalacoes-brutas",
+      "macrocelula_id": "ENG",
+      "ordem": 8,
+      "nome": "Instalações Hidráulicas, Elétricas e Dados",
+      "descricao": "Execução das instalações conforme projeto, incluindo testes e registros.",
+      "duracao_padrao_dias": 10,
+      "responsavel_padrao": "Engenharia",
+      "peso_progresso": 0.08,
+      "cor_hex": "#2B4580",
+      "tipo": "execucao",
+      "dependencias": ["E07"],
+      "tarefas_padrao": [
+        "Passagem de infraestrutura elétrica",
+        "Instalações hidráulicas e de gás",
+        "Infraestrutura de dados e automação (quando houver)",
+        "Testes iniciais e registro em checklist técnico"
+      ]
+    },
+    {
+      "etapa_codigo": "E09",
+      "slug": "drywall-forros-sancas",
+      "macrocelula_id": "ENG",
+      "ordem": 9,
+      "nome": "Drywall, Forros e Sancas",
+      "descricao": "Montagem de estrutura metálica, fechamento com chapas, tratamento e preparação para pintura.",
+      "duracao_padrao_dias": 5,
+      "responsavel_padrao": "Engenharia",
+      "peso_progresso": 0.06,
+      "cor_hex": "#2B4580",
+      "tipo": "execucao",
+      "dependencias": ["E08"],
+      "tarefas_padrao": [
+        "Montagem de estrutura e chapas",
+        "Aberturas para iluminação e exaustão",
+        "Tratamento de juntas",
+        "Conferência de níveis e alinhamentos"
+      ]
+    },
+    {
+      "etapa_codigo": "E10",
+      "slug": "impermeabilizacao",
+      "macrocelula_id": "ENG",
+      "ordem": 10,
+      "nome": "Impermeabilização",
+      "descricao": "Aplicação de sistema impermeabilizante em áreas molhadas e teste de estanqueidade.",
+      "duracao_padrao_dias": 3,
+      "responsavel_padrao": "Engenharia",
+      "peso_progresso": 0.04,
+      "cor_hex": "#2B4580",
+      "tipo": "execucao",
+      "dependencias": ["E08"],
+      "tarefas_padrao": [
+        "Preparação de base",
+        "Aplicação do sistema impermeabilizante",
+        "Teste de balde/estanqueidade",
+        "Registro de laudos e fotos"
+      ]
+    },
+    {
+      "etapa_codigo": "E11",
+      "slug": "revestimentos",
+      "macrocelula_id": "ENG",
+      "ordem": 11,
+      "nome": "Revestimentos (Pisos e Paredes)",
+      "descricao": "Assentamento de pisos e revestimentos com nivelamento e paginação conforme projeto.",
+      "duracao_padrao_dias": 10,
+      "responsavel_padrao": "Engenharia",
+      "peso_progresso": 0.08,
+      "cor_hex": "#2B4580",
+      "tipo": "execucao",
+      "dependencias": ["E09", "E10"],
+      "tarefas_padrao": [
+        "Preparação de bases e contrapiso",
+        "Assentamento conforme paginação de projeto",
+        "Rejuntamento e limpeza técnica",
+        "Check de prumo e nivelamento"
+      ]
+    },
+    {
+      "etapa_codigo": "E12",
+      "slug": "pintura",
+      "macrocelula_id": "ENG",
+      "ordem": 12,
+      "nome": "Pintura",
+      "descricao": "Massa, lixamento e pintura final dos ambientes.",
+      "duracao_padrao_dias": 7,
+      "responsavel_padrao": "Engenharia",
+      "peso_progresso": 0.06,
+      "cor_hex": "#2B4580",
+      "tipo": "acabamento",
+      "dependencias": ["E11"],
+      "tarefas_padrao": [
+        "Tratamento de superfícies",
+        "Aplicação de massa e lixamento",
+        "Pintura definitiva",
+        "Entregar superfícies prontas para marcenaria"
+      ]
+    },
+    {
+      "etapa_codigo": "E13",
+      "slug": "instalacoes-finais-loucas-metais-iluminacao",
+      "macrocelula_id": "ENG",
+      "ordem": 13,
+      "nome": "Instalações Finais (Louças, Metais e Iluminação)",
+      "descricao": "Instalação de louças, metais, luminárias e conferências finais de funcionamento.",
+      "duracao_padrao_dias": 4,
+      "responsavel_padrao": "Engenharia",
+      "peso_progresso": 0.05,
+      "cor_hex": "#2B4580",
+      "tipo": "acabamento",
+      "dependencias": ["E12"],
+      "tarefas_padrao": [
+        "Instalar louças e metais",
+        "Instalar luminárias conforme projeto",
+        "Testes funcionais de todos os pontos",
+        "Registrar checklist de pré-marcenaria"
+      ]
+    },
+    {
+      "etapa_codigo": "E14",
+      "slug": "pre-entrega-para-marcenaria",
+      "macrocelula_id": "ENG",
+      "ordem": 14,
+      "nome": "Pré-Entrega para Marcenaria",
+      "descricao": "Limpeza técnica, conferência de vãos e liberação oficial para medição de marcenaria.",
+      "duracao_padrao_dias": 1,
+      "responsavel_padrao": "Engenharia",
+      "peso_progresso": 0.03,
+      "cor_hex": "#2B4580",
+      "tipo": "marco",
+      "dependencias": ["E13"],
+      "tarefas_padrao": [
+        "Limpeza técnica dos ambientes",
+        "Conferir vãos e níveis para marcenaria",
+        "Registrar status 'Obra pronta para medição'",
+        "Disparar notificação para equipe de marcenaria"
+      ]
+    },
+    {
+      "etapa_codigo": "E15",
+      "slug": "medicao-final-marcenaria",
+      "macrocelula_id": "MAR",
+      "ordem": 15,
+      "nome": "Medição Final de Marcenaria",
+      "descricao": "Medição precisa dos ambientes após a conclusão das etapas de engenharia.",
+      "duracao_padrao_dias": 2,
+      "responsavel_padrao": "Marcenaria",
+      "peso_progresso": 0.04,
+      "cor_hex": "#8B5E3C",
+      "tipo": "preparacao",
+      "dependencias": ["E14"],
+      "tarefas_padrao": [
+        "Medição final de todos os ambientes com marcenaria",
+        "Registro fotográfico técnico dos pontos críticos",
+        "Atualização de medidas no projeto",
+        "Confirmação de prazos com fábrica"
+      ]
+    },
+    {
+      "etapa_codigo": "E16",
+      "slug": "projeto-executivo-marcenaria",
+      "macrocelula_id": "MAR",
+      "ordem": 16,
+      "nome": "Projeto Executivo de Marcenaria",
+      "descricao": "Desenvolvimento das pranchas técnicas de marcenaria sob medida.",
+      "duracao_padrao_dias": 7,
+      "responsavel_padrao": "Marcenaria",
+      "peso_progresso": 0.06,
+      "cor_hex": "#8B5E3C",
+      "tipo": "projeto",
+      "dependencias": ["E15"],
+      "tarefas_padrao": [
+        "Gerar pranchas técnicas por ambiente",
+        "Definir ferragens, acabamentos e detalhes",
+        "Rodar checklist de compatibilização com elétrica/iluminação",
+        "Registrar aprovação do cliente no WGEasy"
+      ]
+    },
+    {
+      "etapa_codigo": "E17",
+      "slug": "fabricacao-marcenaria",
+      "macrocelula_id": "MAR",
+      "ordem": 17,
+      "nome": "Fabricação da Marcenaria",
+      "descricao": "Corte, usinagem, borda, montagem e controle de qualidade em fábrica.",
+      "duracao_padrao_dias": 40,
+      "responsavel_padrao": "Marcenaria",
+      "peso_progresso": 0.10,
+      "cor_hex": "#8B5E3C",
+      "tipo": "execucao",
+      "dependencias": ["E16"],
+      "tarefas_padrao": [
+        "Planejamento de produção por ambiente",
+        "Corte e borda das peças",
+        "Pré-montagem e conferência de medidas",
+        "Check final de qualidade antes da expedição"
+      ]
+    },
+    {
+      "etapa_codigo": "E18",
+      "slug": "entrega-marcenaria-obra",
+      "macrocelula_id": "MAR",
+      "ordem": 18,
+      "nome": "Entrega da Marcenaria na Obra",
+      "descricao": "Transporte e logística de entrega dos módulos na obra.",
+      "duracao_padrao_dias": 2,
+      "responsavel_padrao": "Marcenaria",
+      "peso_progresso": 0.03,
+      "cor_hex": "#8B5E3C",
+      "tipo": "logistica",
+      "dependencias": ["E17"],
+      "tarefas_padrao": [
+        "Planejar logística de transporte",
+        "Agendar janelas com condomínio",
+        "Conferir volumes entregues",
+        "Registrar entrega completa no sistema"
+      ]
+    },
+    {
+      "etapa_codigo": "E19",
+      "slug": "instalacao-marcenaria",
+      "macrocelula_id": "MAR",
+      "ordem": 19,
+      "nome": "Instalação da Marcenaria",
+      "descricao": "Instalação completa dos móveis sob medida, com ajustes finos.",
+      "duracao_padrao_dias": 10,
+      "responsavel_padrao": "Marcenaria",
+      "peso_progresso": 0.10,
+      "cor_hex": "#8B5E3C",
+      "tipo": "execucao",
+      "dependencias": ["E18"],
+      "tarefas_padrao": [
+        "Instalar módulos e portas",
+        "Regular dobradiças e corrediças",
+        "Alinhar com sancas, iluminação e revestimentos",
+        "Registrar pendências e ajustes finais"
+      ]
+    },
+    {
+      "etapa_codigo": "E20",
+      "slug": "ajustes-finos-entrega-turnkey",
+      "macrocelula_id": "MAR",
+      "ordem": 20,
+      "nome": "Ajustes Finais e Entrega Turn Key",
+      "descricao": "Correção de detalhes, limpeza técnica, entrega oficial e registro de pós-obra.",
+      "duracao_padrao_dias": 3,
+      "responsavel_padrao": "Marcenaria",
+      "peso_progresso": 0.08,
+      "cor_hex": "#F25C26",
+      "tipo": "marco",
+      "dependencias": ["E19"],
+      "tarefas_padrao": [
+        "Executar ajustes finos",
+        "Limpeza técnica pós-montagem",
+        "Vistoria com o cliente e termo de aceite",
+        "Registrar início da fase de garantia e pós-obra"
+      ]
+    }
+  ]
+}

@@ -15,7 +15,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
+
 
 const Header = ({ toggleSidebar, isStore = false }) => {
   const { cartItems } = useCart();
@@ -39,16 +40,6 @@ const Header = ({ toggleSidebar, isStore = false }) => {
     navigate('/login');
   };
 
-  const handleGoToProfile = () => {
-    // aqui você pode criar uma rota /admin/perfil ou /perfil
-    navigate('/admin/configuracoes'); // ou outra rota de "minha conta"
-  };
-
-  const handleGoToUsers = () => {
-    // novo padrão de rota do módulo Administrativo
-    navigate('/admin/usuarios');
-  };
-
   return (
     <>
       <header className={`glass-effect border-b border-purple-200/50 sticky top-0 z-40 ${isStore ? 'bg-gray-900/50 border-white/10 text-white' : ''}`}>
@@ -64,18 +55,11 @@ const Header = ({ toggleSidebar, isStore = false }) => {
             </Button>
             
             <div className="relative flex-1 max-w-md">
-              <Search
-                className={`absolute left-3 top-1/2 -translate-y-1/2 ${isStore ? 'text-gray-400' : 'text-muted-foreground'}`}
-                size={18}
-              />
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isStore ? 'text-gray-400' : 'text-muted-foreground'}`} size={18} />
               <input
                 type="text"
-                placeholder={isStore ? "Buscar produtos..." : "Buscar clientes, obras, materiais..."}
-                className={`w-full pl-10 pr-4 py-2 rounded-xl border transition-all ${
-                  isStore
-                    ? 'bg-white/10 border-white/20 focus:bg-white/20 focus:ring-purple-500/50'
-                    : 'border-purple-200/50 bg-white/50 focus:ring-purple-500/50'
-                }`}
+                placeholder={isStore ? "Buscar produtos..." : "Buscar clientes, obras..."}
+                className={`w-full pl-10 pr-4 py-2 rounded-xl border transition-all ${isStore ? 'bg-white/10 border-white/20 focus:bg-white/20 focus:ring-purple-500/50' : 'border-purple-200/50 bg-white/50 focus:ring-purple-500/50'}`}
               />
             </div>
           </div>
@@ -103,21 +87,15 @@ const Header = ({ toggleSidebar, isStore = false }) => {
               className={`relative p-2 rounded-xl transition-colors ${isStore ? 'hover:bg-white/10' : 'hover:bg-purple-100'}`}
             >
               <Bell size={20} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </motion.button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div
-                  className={`flex items-center gap-3 pl-4 cursor-pointer ${
-                    isStore ? 'border-l border-white/20' : 'border-l border-purple-200/50'
-                  }`}
-                >
+                <div className={`flex items-center gap-3 pl-4 cursor-pointer ${isStore ? 'border-l border-white/20' : 'border-l border-purple-200/50'}`}>
                   <div className="text-right">
                     <p className="font-semibold text-sm">{profile?.nome || 'Usuário'}</p>
-                    <p className={`text-xs capitalize ${isStore ? 'text-gray-300' : 'text-muted-foreground'}`}>
-                      {profile?.role || 'Perfil'}
-                    </p>
+                    <p className={`text-xs capitalize ${isStore ? 'text-gray-300' : 'text-muted-foreground'}`}>{profile?.role || 'Perfil'}</p>
                   </div>
                   <Avatar>
                     <AvatarImage src={avatarUrl} alt={profile?.nome} />
@@ -130,10 +108,7 @@ const Header = ({ toggleSidebar, isStore = false }) => {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleGoToProfile}>
-                  Meu Perfil / Configurações
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleGoToUsers}>
+                <DropdownMenuItem onClick={() => navigate('/usuarios')}>
                   Gerenciar Usuários
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -143,10 +118,10 @@ const Header = ({ toggleSidebar, isStore = false }) => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
           </div>
         </div>
       </header>
-
       {isStore && <ShoppingCart isCartOpen={isCartOpen} setIsCartOpen={setIsCartOpen} />}
     </>
   );

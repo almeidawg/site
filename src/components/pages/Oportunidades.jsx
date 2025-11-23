@@ -8,14 +8,21 @@ import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 
 const Oportunidades = ({ modulo = 'oportunidades', title = 'Oportunidades' }) => {
-    const { orgId } = useAuth();
+    const { orgId, loading: authLoading } = useAuth();
     const [boardId, setBoardId] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
     const { toast } = useToast();
 
     React.useEffect(() => {
+        if (authLoading) return;
+        
         const getBoard = async () => {
-            if (!orgId) return;
+            if (!orgId) {
+                toast({ title: "Organização não encontrada", description: "O seu usuário não parece estar vinculado a uma organização.", variant: "destructive" });
+                setLoading(false);
+                return;
+            };
+
             setLoading(true);
             try {
                 const { data, error } = await supabase.rpc('kanban_ensure_board', { p_modulo: modulo, p_org_id: orgId });
@@ -29,9 +36,9 @@ const Oportunidades = ({ modulo = 'oportunidades', title = 'Oportunidades' }) =>
             }
         };
         getBoard();
-    }, [orgId, toast, modulo, title]);
+    }, [orgId, toast, modulo, title, authLoading]);
 
-    if (loading) {
+    if (authLoading || loading) {
         return (
             <div className="flex h-full w-full items-center justify-center p-8">
                 <div className="flex flex-col items-center gap-4">
@@ -40,6 +47,17 @@ const Oportunidades = ({ modulo = 'oportunidades', title = 'Oportunidades' }) =>
                 </div>
             </div>
         );
+    }
+    
+    if (!boardId) {
+        return (
+             <div className="flex h-full w-full items-center justify-center p-8">
+                <div className="text-center">
+                    <h2 className="text-xl font-semibold">Quadro não pôde ser carregado</h2>
+                    <p className="text-muted-foreground mt-2">Verifique se sua organização está configurada corretamente.</p>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -53,7 +71,7 @@ const Oportunidades = ({ modulo = 'oportunidades', title = 'Oportunidades' }) =>
                     <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
                 </div>
                 <div className="flex-grow overflow-auto">
-                   {boardId ? <KanbanBoard boardId={boardId} /> : <p>Quadro não encontrado.</p>}
+                   <KanbanBoard boardId={boardId} />
                 </div>
             </div>
         </>

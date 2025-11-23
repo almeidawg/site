@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
     import { supabase } from '@/lib/customSupabaseClient';
     import { Button } from '@/components/ui/button';
     import { motion } from 'framer-motion';
-    import { PlusCircle, Loader2, Users2, Building, User, Edit, Trash2, LayoutGrid, List, Search, UserCheck, Truck, Briefcase } from 'lucide-react';
+    import { PlusCircle, Loader2, Users2, Building, User, List, Search, UserCheck, Truck, Briefcase, LayoutGrid } from 'lucide-react';
     import { useToast } from '@/components/ui/use-toast';
     import FichaCliente from '@/components/pessoas/FichaCliente';
     import NovaPessoaDialog from '@/components/pessoas/NovaPessoaDialog';
@@ -60,11 +61,11 @@ import { Helmet } from 'react-helmet';
                 }
             }
             setLoading(false);
-        }, [toast, view, searchTerm, selectedPessoa]);
+        }, [toast, view, searchTerm, selectedPessoa?.id]);
 
         useEffect(() => {
             fetchPessoas(true);
-        }, [view, searchTerm]);
+        }, [view, searchTerm, fetchPessoas]);
 
         const handleOpenDialog = (pessoa = null, tipo = 'cliente') => {
             setDefaultTipo(tipo);
@@ -159,13 +160,13 @@ import { Helmet } from 'react-helmet';
         };
 
         return (
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full p-4">
                  <Helmet>
                     <title>Pessoas - Gestão de Clientes, Fornecedores, Colaboradores</title>
                     <meta name="description" content="Gerencie todos os seus clientes, fornecedores, colaboradores e especificadores em um só lugar." />
                 </Helmet>
                 <div className="flex items-start justify-between mb-4">
-                    <div><h2 className="text-2xl font-bold flex items-center gap-2"><Users2 />Pessoas</h2><p className="text-muted-foreground">Gestão de Clientes, Fornecedores e Colaboradores</p></div>
+                    <div><h1 className="text-2xl font-bold flex items-center gap-2"><Users2 />Pessoas</h1><p className="text-muted-foreground">Gestão de Clientes, Fornecedores e Colaboradores</p></div>
                     <div className="flex items-center gap-2">
                          {view !== 'especificadores' && (
                              <ToggleGroup type="single" value={layout} onValueChange={(v) => { if(v) { setLayout(v); if(v === 'list' && !selectedPessoa && pessoas.length > 0) setSelectedPessoa(pessoas[0]); else if (v === 'table') setSelectedPessoa(null); }}} variant="outline">

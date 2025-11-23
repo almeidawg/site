@@ -1,4 +1,6 @@
+
 export async function parseFnError(err) {
+      if (!err) return 'Erro desconhecido';
       const ctx = err?.context;
 
       if (typeof ctx?.error === 'string') {

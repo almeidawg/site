@@ -1,40 +1,32 @@
-﻿CRM
+<!doctype html>
+<html lang="en">
 
-- Leads & Oportunidades
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="generator" content="Hostinger Horizons" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-- Comercial
-Clientes 
-Propostas
-Contratos
+  <title>WGEasy - Sistema WG Almeida</title>
 
-- Arquitetura
+  <!-- 🔥 Fallback Supabase (OU leitura externa) -->
+  <!-- 
+    Se o .env estiver faltando no ambiente de produção/homologação,
+    o cliente Supabase será carregado a partir deste objeto global.
+  -->
+  <script>
+    window.__WGEASY_SUPABASE__ = {
+      url: "https://ahlqzzkxuutwoepirpzr.supabase.co",
+      anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    };
+  </script>
+</head>
 
-- Engenharia
+<body>
+  <div id="root"></div>
 
-- Marcenaria
+  <!-- Entrada principal do React/Vite -->
+  <script type="module" src="/src/main.jsx"></script>
+</body>
 
-- Operacional
-Projects (Cronograma)
-Documentos
-Compras
-Equipes
-Assistência
-
--Financeiro
-calculadora de comissão 
-
-- WG Storage
-
--WG Store
-
--institucional (aqui teremos material de marketng institucional, trei)
-Marketing 
-Material de vendas
-Modelos Prontos 
-Porfolios
-Material de Apoio
-
-
-- Administrativo
-Usuários
-Configurações
+</html>

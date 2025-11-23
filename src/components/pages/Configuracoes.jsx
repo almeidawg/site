@@ -11,7 +11,7 @@ import EmpresasGrupo from '@/components/config/EmpresasGrupo';
 const Configuracoes = () => {
   const { orgId, loading } = useAuth();
 
-  if (loading || !orgId) {
+  if (loading) {
     return (
       <div className="p-6 flex justify-center items-center h-full">
         <div className="text-center">
@@ -20,6 +20,17 @@ const Configuracoes = () => {
         </div>
       </div>
     );
+  }
+
+  if (!orgId) {
+      return (
+          <div className="p-6 flex justify-center items-center h-full">
+              <div className="text-center">
+                  <h2 className="text-xl font-semibold">Organização não encontrada</h2>
+                  <p className="text-muted-foreground mt-2">Seu usuário não está vinculado a uma organização.</p>
+              </div>
+          </div>
+      );
   }
 
   return (

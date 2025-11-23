@@ -29,7 +29,7 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, onSaveSuccess, onSave: onS
             marcenaria: false,
         },
         valor_proposta: '',
-        proposta_id: 'none', // Default to 'none'
+        proposta_id: null,
     }), [initialColumnId, columns]);
 
     const [formData, setFormData] = useState(getInitialState());
@@ -48,7 +48,7 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, onSaveSuccess, onSave: onS
                     coluna_id: cardToEdit.coluna_id || initialColumnId || '',
                     valor_proposta: cardToEdit.valor_proposta || '',
                     payload: cardToEdit.payload || { arquitetura: false, engenharia: false, marcenaria: false },
-                    proposta_id: cardToEdit.proposta_id || 'none', // Default to 'none'
+                    proposta_id: cardToEdit.proposta_id || null,
                 });
             } else {
                 setFormData(getInitialState());
@@ -75,15 +75,11 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, onSaveSuccess, onSave: onS
         fetchPropostas();
     }, [formData.cliente_id, toast]);
 
-    const handleSelectChange = (id, value) => {
-        setFormData(prev => ({ ...prev, [id]: value }));
-    };
-
     const handlePropostaChange = (propostaId) => {
         const proposta = propostasCliente.find(p => p.id === propostaId);
         setFormData(prev => ({
             ...prev,
-            proposta_id: propostaId === 'none' ? null : propostaId, // Handle 'none'
+            proposta_id: propostaId === 'none' ? null : propostaId,
             valor_proposta: proposta ? proposta.valor_total : prev.valor_proposta,
         }));
     };
@@ -111,7 +107,7 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, onSaveSuccess, onSave: onS
             created_by: user.id,
             valor_proposta: parseFloat(dataToSave.valor_proposta) || 0,
             coluna_id: dataToSave.coluna_id || columns?.[0]?.id,
-            proposta_id: dataToSave.proposta_id === 'none' ? null : dataToSave.proposta_id, // Ensure null for 'none'
+            proposta_id: dataToSave.proposta_id === 'none' ? null : dataToSave.proposta_id,
         };
 
         const isEditing = !!id;
@@ -125,6 +121,7 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, onSaveSuccess, onSave: onS
         } else {
             toast({ title: 'Sucesso!', description: `Oportunidade ${isEditing ? 'atualizada' : 'criada'}.` });
             onSave();
+            onOpenChange(false);
         }
         setLoading(false);
     };
@@ -149,7 +146,7 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, onSaveSuccess, onSave: onS
                             table="entities"
                             displayColumn="nome_razao_social"
                             value={formData.cliente_id}
-                            onChange={(opt) => setFormData(prev => ({...prev, cliente_id: opt ? opt.id : null, proposta_id: 'none'}))} // Reset proposta_id to 'none'
+                            onChange={(opt) => setFormData(prev => ({...prev, cliente_id: opt ? opt.id : null, proposta_id: null}))}
                             placeholder="Buscar cliente..."
                             filterColumn="tipo"
                             filterValue="cliente"
@@ -160,7 +157,7 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, onSaveSuccess, onSave: onS
                         <Select onValueChange={handlePropostaChange} value={formData.proposta_id || 'none'} disabled={!formData.cliente_id || propostasCliente.length === 0}>
                             <SelectTrigger><SelectValue placeholder="Vincular a uma proposta..." /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="none">Nenhuma</SelectItem> {/* Adicionado valor "none" */}
+                                <SelectItem value="none">Nenhuma</SelectItem>
                                 {propostasCliente.map(p => (
                                     <SelectItem key={p.id} value={p.id}>{p.codigo} - {p.valor_total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</SelectItem>
                                 ))}

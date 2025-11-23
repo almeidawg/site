@@ -1,3 +1,4 @@
+
 import { useCallback, useRef, useState } from 'react';
     import { supabase } from '@/lib/customSupabaseClient';
     import { parseFnError } from '@/lib/parseFnError';
@@ -18,21 +19,21 @@ import { useCallback, useRef, useState } from 'react';
         const tid = setTimeout(() => controllerRef.current?.abort(), timeoutMs);
 
         try {
-          const { data, error } = await supabase.functions.invoke(fnName, {
+          const { data, error: invokeError } = await supabase.functions.invoke(fnName, {
             body, headers, signal: controllerRef.current.signal
           });
           
-          if (error) {
-            const msg = await parseFnError(error);
+          if (invokeError) {
+            const msg = await parseFnError(invokeError);
             setError(msg); 
             if(onError) onError(msg); 
             throw new Error(msg);
           }
           
-          if (!data || data?.ok === false) {
-            const msg = data?.error || 'Erro desconhecido ao executar função';
-            setError(msg); 
-            if(onError) onError(msg); 
+          if (data && data.error) {
+            const msg = data.error;
+            setError(msg);
+            if(onError) onError(msg);
             throw new Error(msg);
           }
           
@@ -40,7 +41,11 @@ import { useCallback, useRef, useState } from 'react';
           if(onSuccess) onSuccess(data); 
           return data;
           
-        } finally {
+        } catch (err) {
+            // Error is already set and handled, re-throw to signal failure to caller
+            throw err;
+        }
+        finally {
           clearTimeout(tid); 
           setLoading(false);
         }

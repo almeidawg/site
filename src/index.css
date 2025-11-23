@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
@@ -74,69 +75,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
-}
-
-h1 { @apply text-3xl font-bold; }
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb {
-  background: #d1d5db; 
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e; 
-}
-
-.nav-item-arquitetura:hover,
-.nav-item-arquitetura.active {
-  background-color: #3b82f6 !important; /* Azul */
-  color: white !important;
-}
-
-.nav-item-engenharia:hover,
-.nav-item-engenharia.active {
-  background-color: #f97316 !important; /* Laranja Obras */
-  color: white !important;
-}
-
-.nav-item-marcenaria:hover,
-.nav-item-marcenaria.active {
-  background-color: #eab308 !important; /* Amarelo Marcenaria */
-  color: white !important;
-}
-
-.nav-item.active {
-    background-color: hsl(var(--primary)) !important;
-    color: hsl(var(--primary-foreground)) !important;
-}
-
-.nav-item:hover {
-    background-color: hsl(var(--primary) / 0.1) !important;
-    color: hsl(var(--primary)) !important;
-}
-
-/* Mantém o hover laranja para itens que não são os coloridos */
-a:has(> .nav-item:not(.nav-item-arquitetura):not(.nav-item-engenharia):not(.nav-item-marcenaria)):hover .nav-item {
-    background-color: hsl(var(--primary) / 0.1) !important;
-    color: hsl(var(--primary)) !important;
-}
-
-.glass-effect {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.dark .glass-effect {
-    background: rgba(20, 20, 20, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }

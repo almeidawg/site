@@ -17,7 +17,9 @@ const CrudDialog = ({ open, onOpenChange, item, onSave, columns, title }) => {
   const [formData, setFormData] = useState({});
   
   useEffect(() => {
-    setFormData(item || columns.reduce((acc, col) => ({...acc, [col.key]: col.default || ''}), {}));
+    if (open) {
+        setFormData(item || columns.reduce((acc, col) => ({...acc, [col.key]: col.default || ''}), {}));
+    }
   }, [item, columns, open]);
 
   const handleSubmit = (e) => {
@@ -89,9 +91,9 @@ const CrudManager = ({ title, table, columns, orgId, orderColumn = 'name' }) => 
     const { id, ...rest } = formData;
     const payload = { ...rest, org_id: orgId };
     
-    const primaryColumn = columns.find(c => c.key === orderColumn);
-    if (!payload[primaryColumn.key]) {
-        toast({ title: 'Erro de Validação', description: `O campo '${primaryColumn?.label || orderColumn}' é obrigatório.`, variant: 'destructive' });
+    const primaryColumnKey = columns.find(c => c.key === 'nome' || c.key === 'name')?.key;
+    if (!primaryColumnKey || !payload[primaryColumnKey]) {
+        toast({ title: 'Erro de Validação', description: `O campo 'Nome' é obrigatório.`, variant: 'destructive' });
         return;
     }
 

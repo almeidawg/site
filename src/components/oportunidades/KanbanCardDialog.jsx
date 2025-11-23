@@ -26,7 +26,6 @@ import React, { useState, useEffect, useCallback } from 'react';
         const [responsibleUser, setResponsibleUser] = useState(null);
         const [isSaving, setIsSaving] = useState(false);
 
-        // Local state for form fields to prevent re-render issues
         const [formState, setFormState] = useState({ titulo: '', descricao: '' });
 
         const handleFormChange = (field, value) => {
@@ -93,8 +92,8 @@ import React, { useState, useEffect, useCallback } from 'react';
                 toast({ title: 'Erro ao salvar alterações', description: error.message, variant: 'destructive' });
             } else {
                 toast({ title: 'Card atualizado com sucesso!' });
-                onUpdate(); // Trigger refetch on parent
-                onOpenChange(false); // Close dialog
+                onUpdate();
+                onOpenChange(false);
             }
         };
 

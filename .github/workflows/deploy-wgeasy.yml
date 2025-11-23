@@ -1,0 +1,43 @@
+name Deploy WGEasy para Hosting Horizons
+
+on
+  push
+    branches
+      - main    # deploy sempre que tiver push na main
+
+jobs
+  build-and-deploy
+    runs-on ubuntu-latest
+
+    steps
+      - name Checkout do código
+        uses actionscheckout@v4
+
+      - name Configurar Node
+        uses actionssetup-node@v4
+        with
+          node-version '20'
+          cache 'npm'
+
+      - name Instalar dependências
+        run npm install
+        # se o projeto estiver em subpasta (ex 02sistemawgeasy), use
+        # working-directory .02sistemawgeasy
+
+      - name Build de produção
+        run npm run build
+        # working-directory .02sistemawgeasy
+
+      - name Deploy via FTP
+        uses SamKirklandFTP-Deploy-Action@v4.3.5
+        with
+          server ${{ secrets.FTP_HOST }}
+          username ${{ secrets.FTP_USERNAME }}
+          password ${{ secrets.FTP_PASSWORD }}
+          protocol ftps
+          port 21
+          local-dir dist
+          # se estiver em subpasta
+          # local-dir 02sistemawgeasydist
+          server-dir public_htmlsistema
+          dangerous-clean-slate true

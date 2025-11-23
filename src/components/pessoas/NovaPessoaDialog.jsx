@@ -33,9 +33,9 @@ import React, { useState, useEffect } from 'react';
         ativo: true,
         endereco: {},
         observacoes: '',
-        procedencia_id: 'none', // Default to 'none'
-        responsavel_id: 'none', // Default to 'none'
-        especificador: 'none', // Default to 'none'
+        procedencia_id: null,
+        responsavel_id: null,
+        especificador: null,
         drive_link: '',
         dados_bancarios: [],
         arquitetura: false,
@@ -82,21 +82,21 @@ import React, { useState, useEffect } from 'react';
           setLoading(true);
           const { data: procedenciasData, error: procedenciasError } = await supabase.from('comercial_procedencias').select('id, nome').eq('ativo', true);
           if (procedenciasError) toast({ title: "Erro ao buscar procedências", variant: "destructive" });
-          else setProcedencias(procedenciasData);
+          else setProcedencias(procedenciasData || []);
 
           const { data: usersData, error: usersError } = await supabase.from('user_profiles').select('user_id, nome').eq('ativo', true);
           if (usersError) toast({ title: "Erro ao buscar usuários", variant: "destructive" });
-          else setUsers(usersData);
+          else setUsers(usersData || []);
 
           const { data: especificadoresData, error: especificadoresError } = await supabase.from('especificadores').select('id, nome_empresa');
           if (especificadoresError) toast({ title: "Erro ao buscar especificadores", variant: "destructive" });
-          else setEspecificadores(especificadoresData);
+          else setEspecificadores(especificadoresData || []);
 
           if (entityToEdit) {
             setIsEditing(true);
             const { data: fullEntity, error: entityError } = await supabase.from('v_entities_full').select('*, dados_bancarios:bank_accounts(*)').eq('id', entityToEdit.id).single();
             if(entityError) toast({ title: "Erro ao buscar dados completos", variant: "destructive" });
-            else setFormData({ ...initialFormState, ...fullEntity, tipo: fullEntity.tipo || defaultTipo, procedencia_id: fullEntity.procedencia_id || 'none', responsavel_id: fullEntity.responsavel_id || 'none', especificador: fullEntity.especificador || 'none' }); // Default to 'none'
+            else setFormData({ ...initialFormState, ...fullEntity, tipo: fullEntity.tipo || defaultTipo });
           } else {
             setIsEditing(false);
             setFormData({...initialFormState, tipo: defaultTipo});
@@ -119,7 +119,7 @@ import React, { useState, useEffect } from 'react';
       };
       
       const handleSelectChange = (id, value) => {
-        setFormData(prev => ({ ...prev, [id]: value === 'none' ? null : value })); // Handle 'none'
+        setFormData(prev => ({ ...prev, [id]: value === 'none' ? null : value }));
       };
       
       const handleAddressChange = (e) => {
@@ -166,6 +166,10 @@ import React, { useState, useEffect } from 'react';
 
       const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.nome_razao_social) {
+            toast({ title: "Campo obrigatório", description: "O nome/razão social é obrigatório.", variant: "destructive" });
+            return;
+        }
         setLoading(true);
 
         try {
@@ -214,13 +218,13 @@ import React, { useState, useEffect } from 'react';
           <h3 className="font-semibold text-lg">Detalhes Comerciais</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2"><Label>Responsável</Label>
-              <Select onValueChange={(val) => handleSelectChange('responsavel_id', val)} value={formData.responsavel_id}>
+              <Select onValueChange={(val) => handleSelectChange('responsavel_id', val)} value={formData.responsavel_id || 'none'}>
                 <SelectTrigger><SelectValue placeholder="Selecione um responsável" /></SelectTrigger>
                 <SelectContent><SelectItem value="none">Nenhum</SelectItem>{users.map(u => (<SelectItem key={u.user_id} value={u.user_id}>{u.nome}</SelectItem>))}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2"><Label>Procedência</Label>
-              <Select onValueChange={(val) => handleSelectChange('procedencia_id', val)} value={formData.procedencia_id}>
+              <Select onValueChange={(val) => handleSelectChange('procedencia_id', val)} value={formData.procedencia_id || 'none'}>
                 <SelectTrigger><SelectValue placeholder="Selecione a procedência" /></SelectTrigger>
                 <SelectContent><SelectItem value="none">Nenhum</SelectItem>{procedencias.map(p => (<SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>))}</SelectContent>
               </Select>

@@ -9,7 +9,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 
-const AddColumnForm = ({ boardId, onColumnAdded }) => {
+const AddColumnForm = ({ boardId, onColumnAdded, columns }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [columnName, setColumnName] = useState('');
   const { toast } = useToast();
@@ -19,9 +19,10 @@ const AddColumnForm = ({ boardId, onColumnAdded }) => {
       setIsAdding(false);
       return;
     }
+    const newPosition = columns.length > 0 ? Math.max(...columns.map(c => c.pos)) + 1 : 0;
     const { data: newColumn, error } = await supabase
       .from('kanban_colunas')
-      .insert({ board_id: boardId, nome: columnName, pos: 9999 }) // Let trigger handle pos
+      .insert({ board_id: boardId, nome: columnName, pos: newPosition })
       .select()
       .single();
     
@@ -79,7 +80,6 @@ const KanbanBoard = ({ boardId }) => {
     }
     setLoading(true);
     try {
-      console.log(`[KanbanBoard] Fetching data for board: ${currentBoardId}`);
       const { data: columnsData, error: columnsError } = await supabase
         .from('kanban_colunas')
         .select('*')
@@ -87,7 +87,6 @@ const KanbanBoard = ({ boardId }) => {
         .order('pos', { ascending: true });
 
       if (columnsError) throw columnsError;
-      console.log('[KanbanBoard] Columns fetched:', columnsData);
       setColumns(columnsData || []);
 
       const { data: cardsData, error: cardsError } = await supabase
@@ -97,7 +96,6 @@ const KanbanBoard = ({ boardId }) => {
         .is('deleted_at', null);
 
       if (cardsError) throw cardsError;
-      console.log('[KanbanBoard] Cards fetched:', cardsData);
 
       const cardsByColumn = (cardsData || []).reduce((acc, card) => {
         const columnId = card.coluna_id;
@@ -132,7 +130,18 @@ const KanbanBoard = ({ boardId }) => {
     if (!destination) return;
 
     if (type === 'column') {
-        // Column reordering is not implemented in this version
+        const newColumnOrder = Array.from(columns);
+        const [reorderedColumn] = newColumnOrder.splice(source.index, 1);
+        newColumnOrder.splice(destination.index, 0, reorderedColumn);
+
+        setColumns(newColumnOrder);
+
+        const updates = newColumnOrder.map((col, index) => ({ id: col.id, pos: index }));
+        const { error } = await supabase.from('kanban_colunas').upsert(updates);
+        if (error) {
+            toast({ title: 'Erro ao reordenar colunas.', variant: 'destructive' });
+            refreshBoard();
+        }
         return;
     }
 
@@ -141,7 +150,6 @@ const KanbanBoard = ({ boardId }) => {
     const startColumnCards = Array.from(cards[source.droppableId] || []);
     const [movedCard] = startColumnCards.splice(source.index, 1);
 
-    // Optimistic UI Update
     if (source.droppableId === destination.droppableId) {
         startColumnCards.splice(destination.index, 0, movedCard);
         const newCardsState = { ...cards, [source.droppableId]: startColumnCards };
@@ -195,7 +203,7 @@ const KanbanBoard = ({ boardId }) => {
               <h2 className="text-xl font-semibold">Nenhuma coluna encontrada para este quadro.</h2>
               <p className="text-muted-foreground mt-2">Tente adicionar uma nova coluna para começar a organizar suas tarefas.</p>
               <div className="mt-6">
-                <AddColumnForm boardId={boardId} onColumnAdded={handleColumnAdded} />
+                <AddColumnForm boardId={boardId} onColumnAdded={handleColumnAdded} columns={columns} />
               </div>
           </div>
       );
@@ -220,11 +228,12 @@ const KanbanBoard = ({ boardId }) => {
                 onCardUpdated={refreshBoard}
                 onCardDeleted={refreshBoard}
                 boardId={boardId}
+                onColumnUpdated={refreshBoard}
               />
             ))}
             {provided.placeholder}
              <div className="flex-shrink-0 w-80">
-                <AddColumnForm boardId={boardId} onColumnAdded={handleColumnAdded} />
+                <AddColumnForm boardId={boardId} onColumnAdded={handleColumnAdded} columns={columns} />
             </div>
           </div>
         )}

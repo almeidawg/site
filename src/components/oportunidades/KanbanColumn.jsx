@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const KanbanColumn = ({ column, cards, index, onCardUpdated, boardId, onCardAdded, onCardDeleted }) => {
+const KanbanColumn = ({ column, cards, index, onCardUpdated, boardId, onCardAdded, onCardDeleted, onColumnUpdated }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [newTitle, setNewTitle] = useState(column.nome);
     const { toast } = useToast();
@@ -41,7 +41,7 @@ const KanbanColumn = ({ column, cards, index, onCardUpdated, boardId, onCardAdde
             toast({ title: 'Erro ao renomear coluna', description: error.message, variant: 'destructive' });
             setNewTitle(column.nome);
         } else {
-            // No optimistic update here, parent will refetch and re-render.
+            onColumnUpdated();
         }
         setIsEditingTitle(false);
     };

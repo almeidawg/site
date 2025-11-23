@@ -6,14 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Plus, Edit, Search } from 'lucide-react';
 
 const ContaFormDialog = ({ open, onOpenChange, onSave, conta }) => {
   const [formData, setFormData] = useState({ name: '', opening_balance: 0 });
   useEffect(() => { 
-      setFormData(conta || { name: '', opening_balance: 0 });
+      if (open) {
+        setFormData(conta || { name: '', opening_balance: 0 });
+      }
   }, [conta, open]);
   const handleSubmit = (e) => { e.preventDefault(); onSave(formData); };
 
@@ -58,7 +60,7 @@ const ContasBancariasDialog = ({ open, onOpenChange, empresa, orgId }) => {
     setLoading(false);
   }, [empresa?.id, toast]);
 
-  useEffect(() => { fetchContas(); }, [fetchContas, actionCounter]);
+  useEffect(() => { if (open) fetchContas(); }, [fetchContas, actionCounter, open]);
 
   const handleSaveConta = async (formData) => {
     const { id, ...rest } = formData;
@@ -70,6 +72,11 @@ const ContasBancariasDialog = ({ open, onOpenChange, empresa, orgId }) => {
         opening_balance: parseFloat(formData.opening_balance) || 0,
         current_balance: parseFloat(formData.opening_balance) || 0,
         is_archived: false,
+        tipo: 'corrente',
+        moeda: 'BRL',
+        saldo_inicial: parseFloat(formData.opening_balance) || 0,
+        ativo: true,
+        ordem: 1,
     };
 
     if (!payload.name) {
@@ -95,7 +102,7 @@ const ContasBancariasDialog = ({ open, onOpenChange, empresa, orgId }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
-        <DialogHeader><DialogTitle>Contas Bancárias de {empresa.razao_social}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Contas Bancárias de {empresa?.razao_social}</DialogTitle></DialogHeader>
         <Button onClick={() => { setCurrentConta(null); setIsFormOpen(true); }}><Plus className="mr-2 h-4 w-4" /> Nova Conta</Button>
         {loading ? <div className="flex justify-center p-4"><Loader2 className="animate-spin mx-auto" /></div> : (
           <Table>
@@ -126,7 +133,7 @@ const EmpresaDialog = ({ open, onOpenChange, onSave, empresa }) => {
   const [loadingCnpj, setLoadingCnpj] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => { setFormData(empresa || {}); }, [empresa]);
+  useEffect(() => { if (open) setFormData(empresa || {}); }, [empresa, open]);
 
   const handleCnpjSearch = async () => {
     const cnpj = formData.cnpj?.replace(/\D/g, '');
@@ -202,7 +209,7 @@ const EmpresasGrupo = ({ orgId }) => {
 
   const handleSaveEmpresa = async (formData) => {
     const { id, ...rest } = formData;
-    const payload = { ...rest, org_id: orgId };
+    const payload = { ...rest, org_id: orgId, active: true };
     const { error } = id
       ? await supabase.from('empresas').update(payload).eq('id', id)
       : await supabase.from('empresas').insert(payload);

@@ -1,105 +1,60 @@
-import React from 'react';
-import {
-  KanbanSquare, LayoutDashboard, FileText, FileSignature, Users,
-  Folder, DraftingCompass, HardHat, Lamp, Wrench, Settings, Users2,
-  ShoppingCart, Briefcase, Store, DollarSign, GanttChart, Package
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useTabs } from '@/contexts/TabContext';
+// src/components/layout/Sidebar.jsx
+import { Link, useLocation } from "react-router-dom";
 
-const iconMap = {
-  LayoutDashboard,
-  KanbanSquare,
-  FileText,
-  FileSignature,
-  Users,
-  Folder,
-  DraftingCompass,
-  HardHat,
-  Lamp,
-  Wrench,
-  Settings,
-  Users2,
-  ShoppingCart,
-  Briefcase,
-  Store,
-  DollarSign,
-  GanttChart,
-  Package, // usado para Depósito
-};
-const menuItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
+export default function Sidebar() {
+  const location = useLocation();
 
-  // CRM
-  {
-    section: 'CRM',
-    items: [
-      { path: '/oportunidades', label: 'Leads & Oportunidades', icon: 'KanbanSquare' },
-      { path: '/pessoas', label: 'Clientes', icon: 'Users' },
-      { path: '/propostas', label: 'Propostas', icon: 'FileText' },
-      { path: '/contratos', label: 'Contratos', icon: 'FileSignature' },
-      { path: '/financeiro-ext', label: 'Financeiro (CRM)', icon: 'DollarSign' },
-      { path: '/documentos', label: 'Documentos', icon: 'Folder' },
-    ],
-  },
+  const menu = [
+    { label: "Dashboard", path: "/" },
+    { label: "Kanban", path: "/kanban" },
+    { label: "Marcenaria", path: "/marcenaria" },
+    { label: "Financeiro", path: "/financeiro/lancamentos" }
+  ];
 
-  // Núcleos técnicos
-  {
-    section: 'Arquitetura',
-    items: [
-      { path: '/arquitetura', label: 'Arquitetura', icon: 'DraftingCompass' },
-    ],
-  },
-  {
-    section: 'Engenharia',
-    items: [
-      { path: '/engenharia', label: 'Engenharia', icon: 'HardHat' },
-    ],
-  },
-  {
-    section: 'Marcenaria',
-    items: [
-      { path: '/marcenaria', label: 'Marcenaria', icon: 'Lamp' },
-    ],
-  },
+  return (
+    <aside
+      style={{
+        width: 220,
+        backgroundColor: "#0f172a",
+        color: "#f1f5f9",
+        padding: 20,
+        display: "flex",
+        flexDirection: "column",
+        gap: 12
+      }}
+    >
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 700,
+          marginBottom: 20,
+          letterSpacing: 1
+        }}
+      >
+        WGEasy
+      </div>
 
-  // Operacional
-  {
-    section: 'Operacional',
-    items: [
-      { path: '/cronogramas', label: 'Projects (Cronograma)', icon: 'GanttChart' },
-      { path: '/compras', label: 'Compras', icon: 'ShoppingCart' },
-      { path: '/assistencia', label: 'Assistência', icon: 'Wrench' },
-      // futuro: Equipes
-      // { path: '/equipes', label: 'Equipes', icon: 'Users2' },
-      { path: '/deposito', label: 'Depósito', icon: 'Package' },
-    ],
-  },
+      {menu.map((item) => {
+        const active = location.pathname === item.path;
 
-  // Financeiro
-  {
-    section: 'Financeiro',
-    items: [
-      { path: '/financeiro-ext', label: 'Financeiro Geral', icon: 'DollarSign' },
-      // futuro: calculadora de comissão própria
-      // { path: '/financeiro-comissao', label: 'Calculadora de Comissão', icon: 'DollarSign' },
-    ],
-  },
-
-  // Links / Stores / Institucional
-  {
-    section: 'WG Store',
-    items: [
-      { path: '#store-modal', label: 'WG Store', icon: 'Store' },
-    ],
-  },
-
-  // Administrativo
-  {
-    section: 'Administrativo',
-    items: [
-      { path: '/usuarios', label: 'Usuários', icon: 'Users2' },
-      { path: '/configuracoes', label: 'Configurações', icon: 'Settings' },
-    ],
-  },
-];
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            style={{
+              padding: "10px 12px",
+              borderRadius: 8,
+              background: active ? "#1e293b" : "transparent",
+              color: active ? "#fff" : "#cbd5e1",
+              textDecoration: "none",
+              fontSize: 14,
+              fontWeight: active ? 600 : 400
+            }}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </aside>
+  );
+}

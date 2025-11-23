@@ -16,3 +16,4 @@ const componentMap = {
     { path: '/financeiro/relatorios', label: 'Relatórios', icon: 'PieChart' },
   ]
 }
+

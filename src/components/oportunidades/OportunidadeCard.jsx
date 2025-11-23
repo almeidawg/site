@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
-import { DollarSign, Phone, Home, Edit, MapPin, Trash2, User } from 'lucide-react';
+import { DollarSign, Phone, Edit, MapPin, Trash2, User } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -132,5 +132,3 @@ export const DraggableOportunidadeCard = ({ card, index, ...props }) => {
     </Draggable>
   );
 };
-
-export default OportunidadeCard;
