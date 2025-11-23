@@ -14,7 +14,8 @@
       "Bash(fi)",
       "Bash(if [ -d \"WG/.git\" ])",
       "Bash(then rm -rf WG)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
