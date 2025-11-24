@@ -38,7 +38,7 @@ const EditUsuarioDialog = ({ open, onOpenChange, userToEdit, onUserUpdate }) => 
             .update({ nome, role })
             .eq('user_id', userToEdit.id)
             .select()
-            .single();
+            .maybeSingle();
 
         if (profileError) {
             toast({ title: 'Erro ao atualizar perfil', description: profileError.message, variant: 'destructive' });

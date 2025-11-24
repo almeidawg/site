@@ -41,7 +41,7 @@ export function ColumnHeader({
         .from('kanban_colunas')
         .select('id, nome, pos, cor')
         .eq('id', column.id)
-        .single();
+        .maybeSingle();
 
       if (updated) {
         onRenamed(updated);

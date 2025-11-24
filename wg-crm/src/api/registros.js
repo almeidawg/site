@@ -55,7 +55,7 @@ export async function criarRegistro(payload) {
   const { data, error } = await supabase.from('registros_trabalho').insert([{
     ...cleanPayload,
     quantidade: cleanPayload.quantidade ?? 1
-  }]).select('id').single();
+  }]).select('id').maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -116,7 +116,7 @@ export async function aprovarEGerarLancamento(registroId, aprovado, gerar) {
     .update({ aprovado, gerar_lancamento: gerar })
     .eq('id', registroId)
     .select('lancamento_id')
-    .single();
+    .maybeSingle();
   if (error) throw error;
   return data?.lancamento_id || null;
 }

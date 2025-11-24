@@ -32,7 +32,7 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
       .from('kanban_boards')
       .select('id')
       .eq('modulo', modulo) // mudança: ambiente → modulo
-      .single();
+      .maybeSingle();
 
     if (!board) {
       toast({ title: `Board para módulo "${modulo}" não encontrado.`, variant: 'destructive'});
@@ -89,7 +89,7 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
   }, [cards, columns]);
 
   const handleEditClient = async (clientId) => {
-    const { data, error } = await supabase.from('entities').select('*').eq('id', clientId).single();
+    const { data, error } = await supabase.from('entities').select('*').eq('id', clientId).maybeSingle();
     if (error) {
       toast({ title: 'Erro ao carregar cliente', description: error.message, variant: 'destructive' });
       return;

@@ -80,7 +80,7 @@ import React, { useState, useEffect } from 'react';
                     .update({ cliente_id: clienteId, cliente_nome: cliente.nome_razao_social, descricao, status })
                     .eq('id', osToEdit.id)
                     .select()
-                    .single();
+                    .maybeSingle();
 
                 if (error) {
                     toast({ title: 'Erro ao atualizar O.S.', description: error.message, variant: 'destructive' });
@@ -105,7 +105,7 @@ import React, { useState, useEffect } from 'react';
                         data_solicitacao: new Date().toISOString(),
                     })
                     .select()
-                    .single();
+                    .maybeSingle();
         
                 if (error) {
                     toast({ title: 'Erro ao criar O.S.', description: error.message, variant: 'destructive' });

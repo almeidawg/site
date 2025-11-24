@@ -30,7 +30,7 @@ export function useEspecificador(id) {
           especificador_comissao_niveis(*)
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;

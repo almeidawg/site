@@ -36,7 +36,7 @@ export function AddColumnCard({ boardId, onCreated }) {
         .from('kanban_colunas')
         .select('id, nome, pos, cor')
         .eq('id', data)
-        .single();
+        .maybeSingle();
 
       if (colData) {
         onCreated(colData);

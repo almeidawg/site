@@ -25,7 +25,7 @@ export function useBankAccounts(entityId) {
         .from('bank_accounts')
         .insert({ ...newAccount, entity_id: entityId })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -42,7 +42,7 @@ export function useBankAccounts(entityId) {
         .update(updates)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;

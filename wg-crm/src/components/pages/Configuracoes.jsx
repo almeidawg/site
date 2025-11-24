@@ -73,7 +73,7 @@ const SimpleListManager = ({ title, table, placeholder, column = 'nome' }) => {
 
     const handleAddItem = async () => {
         if (!newItem.trim()) return;
-        const { data, error } = await supabase.from(table).insert({ [column]: newItem.trim() }).select().single();
+        const { data, error } = await supabase.from(table).insert({ [column]: newItem.trim() }).select().maybeSingle();
         if(error) {
             toast({ title: `Erro ao adicionar item`, variant: 'destructive'});
         } else {
@@ -175,7 +175,7 @@ const PricelistManager = () => {
             delete upsertData.id;
         }
 
-        const { data, error } = await supabase.from('produtos_servicos').upsert(upsertData).select().single();
+        const { data, error } = await supabase.from('produtos_servicos').upsert(upsertData).select().maybeSingle();
 
         if (error) {
             toast({ title: "Erro ao salvar", description: error.message, variant: 'destructive' });

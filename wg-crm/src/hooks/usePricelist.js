@@ -39,7 +39,7 @@ export function useCurrentPrice(produtoServicoId) {
         .or(`validade_fim.is.null,validade_fim.gte.${hoje}`)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
       return data;

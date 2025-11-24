@@ -19,7 +19,7 @@ const Obras = () => {
             .from('kanban_boards')
             .select('id, kanban_colunas(*, color:cor)')
             .eq('ambiente', 'engenharia')
-            .single();
+            .maybeSingle();
 
         if (boardError || !boardData) {
             toast({ title: 'Erro ao carregar o quadro Kanban', variant: 'destructive' });

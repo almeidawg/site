@@ -68,7 +68,7 @@ const KanbanCardDialog = ({ card, boardId, columns = [], open, onOpenChange, onU
       .from('kanban_cards')
       .select('*')
       .eq('id', card.id)
-      .single();
+      .maybeSingle();
 
     if (cardError) {
       toast({ title: 'Erro ao carregar dados do card', description: cardError.message, variant: 'destructive' });
@@ -92,13 +92,13 @@ const KanbanCardDialog = ({ card, boardId, columns = [], open, onOpenChange, onU
     //     .from('entities')
     //     .select('nome_razao_social, equipe')
     //     .eq('id', cardData.entity_id)
-    //     .single();
+    //     .maybeSingle();
     //   if (clientData?.equipe) {
     //     const { data: userData } = await supabase
     //       .from('user_profiles')
     //       .select('user_id, nome, avatar_path')
     //       .eq('user_id', clientData.equipe)
-    //       .single();
+    //       .maybeSingle();
     //     setResponsibleUser(userData);
     //   }
     // }

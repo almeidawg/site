@@ -1,75 +1,87 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
-
-// @ts-ignore
-import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.0.0";
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error("Supabase environment variables are not set.");
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeaders } from "./cors.ts";
+// Simulação de PDF para contornar limitações do ambiente Deno Deploy
+async function generatePdfFromHtml(htmlContent) {
+  const { PDFDocument, rgb, StandardFonts } = await import("https://cdn.skypack.dev/pdf-lib");
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage();
+  const { width, height } = page.getSize();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  page.drawText('--- PDF Gerado via Edge Function ---', {
+    x: 50,
+    y: height - 50,
+    font,
+    size: 18,
+    color: rgb(0.1, 0.1, 0.1)
+  });
+  // Limpa tags HTML para uma visualização de texto simples no PDF
+  const cleanText = htmlContent.replace(/<[^>]*>?/gm, ' ').replace(/\s\s+/g, ' ').trim();
+  page.drawText(cleanText.substring(0, 4000), {
+    x: 50,
+    y: height - 100,
+    font,
+    size: 10,
+    color: rgb(0, 0, 0),
+    maxWidth: width - 100,
+    lineHeight: 14
+  });
+  const pdfBytes = await pdfDoc.save();
+  return pdfBytes;
 }
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+serve(async (req)=>{
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      headers: corsHeaders
+    });
   }
-
   try {
     const { html, path } = await req.json();
-
-    if (!html) {
-      return new Response(JSON.stringify({ error: "HTML content is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (!html || !path) {
+      return new Response(JSON.stringify({
+        error: "Parâmetros 'html' e 'path' são obrigatórios."
+      }), {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        },
+        status: 400
       });
     }
-
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL"), Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
+    const pdf = await generatePdfFromHtml(html);
+    const { error: uploadError } = await supabaseAdmin.storage.from("pdfs").upload(path, pdf, {
+      contentType: "application/pdf",
+      upsert: true
     });
-
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: {
-        top: "20mm",
-        right: "20mm",
-        bottom: "20mm",
-        left: "20mm",
-      },
-    });
-
-    await browser.close();
-
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const filePath = path || `relatorios/report-${Date.now()}.pdf`;
-
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("pdf")
-      .upload(filePath, pdfBuffer, {
-        contentType: "application/pdf",
-        upsert: true,
-      });
-
     if (uploadError) {
+      console.error("Erro no upload do PDF:", uploadError);
       throw uploadError;
     }
-
-    return new Response(JSON.stringify({ path: filePath }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const { data: signedUrlData, error: signedUrlError } = await supabaseAdmin.storage.from("pdfs").createSignedUrl(path, 60 * 60); // URL válida por 1 hora
+    if (signedUrlError) {
+      console.error("Erro ao gerar URL assinada:", signedUrlError);
+      throw signedUrlError;
+    }
+    return new Response(JSON.stringify({
+      url: signedUrlData?.signedUrl
+    }), {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json"
+      },
+      status: 200
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error("Erro fatal na função 'pdf-generate':", e);
+    return new Response(JSON.stringify({
+      error: e.message || 'Erro interno do servidor.'
+    }), {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json"
+      },
+      status: 500
     });
   }
 });

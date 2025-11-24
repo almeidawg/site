@@ -37,7 +37,7 @@ const Oportunidades = () => {
       .from('kanban_boards')
       .select('id, kanban_colunas(*, color:cor)')
       .eq('ambiente', 'oportunidades')
-      .single();
+      .maybeSingle();
 
     if (boardError || !boardData) {
       toast({ title: 'Erro ao carregar funil', description: boardError?.message || 'Quadro não encontrado', variant: 'destructive' });

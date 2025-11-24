@@ -161,7 +161,7 @@ const NovoLeadDialog = ({ open, onOpenChange, leads, setLeads, leadToEdit }) => 
         .update(entityData)
         .eq('id', leadToEdit.id)
         .select()
-        .single();
+        .maybeSingle();
 
       setIsSaving(false);
 
@@ -178,7 +178,7 @@ const NovoLeadDialog = ({ open, onOpenChange, leads, setLeads, leadToEdit }) => 
         .from('entities')
         .insert([entityData])
         .select()
-        .single();
+        .maybeSingle();
 
       setIsSaving(false);
 

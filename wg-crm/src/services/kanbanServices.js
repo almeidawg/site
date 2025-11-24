@@ -18,7 +18,7 @@ export async function createColumn(boardId, nome, cor) {
     .from('kanban_colunas')
     .select('id, nome, pos, cor')
     .eq('id', data)
-    .single();
+    .maybeSingle();
 
   return colData;
 }
@@ -40,7 +40,7 @@ export async function renameColumn(columnId, nome) {
     .from('kanban_colunas')
     .select('id, nome, pos, cor')
     .eq('id', data)
-    .single();
+    .maybeSingle();
 
   return colData;
 }
