@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 13% 97%;
+    --foreground: 224 71% 4%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --primary: 21.2 83.5% 55.3%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 216 46% 32%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 21.2 83.5% 55.3%;
+
+    --radius: 0.5rem;
+
+    /* WG Almeida Palette */
+    --wg-orange: 21.2 83.5% 55.3%; /* #F25C26 */
+    --wg-blue: 224 49% 33%; /* #2B4580 */
+    --wg-green: 171 25% 48%; /* #5E9B94 */
+    --wg-brown: 28 40% 38%; /* #8B5E3C */
+  }
+
+  .dark {
+    /* ... define dark theme colors if needed ... */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .wg-gradient {
+    background: linear-gradient(135deg, hsl(var(--wg-orange)) 0%, hsl(var(--wg-blue)) 100%);
+  }
+
+  .wg-card {
+    @apply bg-card text-card-foreground rounded-xl shadow-sm border border-gray-200/80 transition-all duration-300;
+  }
+
+  .wg-card:hover {
+    @apply shadow-lg transform -translate-y-1;
+  }
+}
