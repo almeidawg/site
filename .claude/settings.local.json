@@ -38,7 +38,21 @@
       "Bash(cmd /c \"APLICAR_MIGRATIONS_GANTT.bat\")",
       "Bash(ls:*)",
       "Bash(git clone:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(supabase stop:*)",
+      "Bash(start http://localhost:3004)",
+      "Bash(supabase db reset:*)",
+      "Bash(docker volume:*)",
+      "Bash(docker logs:*)",
+      "Bash(npx supabase:*)",
+      "Bash(where:*)",
+      "Bash(set PGPASSWORD=SenhaSegura123)",
+      "Bash(\"C:\\Program Files\\PostgreSQL\\18\\bin\\psql.exe\" -h aws-0-sa-east-1.pooler.supabase.com -p 6543 -U postgres.vyxscnevgeubfgfstmtf -d postgres -f \"C:\\Users\\Atendimento\\Documents\\wgeasy\\01 . WGeasy Sistema\\Supabase\\verify_migrations.sql\")",
+      "Bash(\"C:\\Program Files\\PostgreSQL\\18\\bin\\psql.exe\" -h aws-0-sa-east-1.pooler.supabase.com -p 5432 -U postgres.vyxscnevgeubfgfstmtf -d postgres -f \"C:\\Users\\Atendimento\\Documents\\wgeasy\\01 . WGeasy Sistema\\Supabase\\verify_migrations.sql\")",
+      "mcp__MCP_DOCKER__browser_navigate",
+      "mcp__MCP_DOCKER__browser_close",
+      "Bash(schema_dump.sql)",
+      "Bash(copy:*)"
     ],
     "deny": [],
     "ask": []

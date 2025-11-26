@@ -7,7 +7,7 @@ import '@/index.css';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <Router>
+  <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     <AuthProvider>
       <App />
     </AuthProvider>

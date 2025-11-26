@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import Dashboard from '@/components/pages/Dashboard';
@@ -174,8 +174,8 @@ const CrmLayout = () => {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="/colaboradores" element={<PlaceholderPage title="Colaboradores" />} />
-            <Route path="/fornecedores" element={<PlaceholderPage title="Fornecedores" />} />
+            <Route path="/colaboradores" element={<Navigate to="/pessoas?tipo=colaborador" replace />} />
+            <Route path="/fornecedores" element={<Navigate to="/pessoas?tipo=fornecedor" replace />} />
             <Route path="/integrations" element={<IntegrationsPage />} />
             <Route path="/portal-cliente/:id" element={<PortalCliente />} />
           </Routes>
