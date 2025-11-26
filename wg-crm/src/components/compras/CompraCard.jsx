@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, DollarSign, Edit, Package, Trash2, Zap } from 'lucide-react';
+import { Calendar, DollarSign, Edit, Package, Trash2, Zap, Eye, FileDown, MessageCircle, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import jsPDF from 'jspdf';
 
 const CompraCard = ({ compra, index, onEdit, onDelete }) => {
     const { toast } = useToast();
@@ -65,17 +66,17 @@ const CompraCard = ({ compra, index, onEdit, onDelete }) => {
                             </span>
                         </div>
                     )}
-                    <h3 className="font-semibold text-lg">PC #{compra.numero} - {compra.fornecedor}</h3>
-                    <p className="text-sm text-muted-foreground clamp-2-lines">{compra.itens}</p>
-                    {compra.cliente_nome && <p className="text-sm font-semibold text-purple-700 mt-1">Cliente: {compra.cliente_nome}</p>}
+                    <h3 className="font-semibold text-sm">PC #{compra.numero} - {compra.fornecedor || 'Fornecedor não informado'}</h3>
+                    <p className="text-xs text-muted-foreground clamp-2-lines">{compra.itens}</p>
+                    {compra.cliente_nome && <p className="text-xs font-semibold text-purple-700 mt-1">Cliente: {compra.cliente_nome}</p>}
                 </div>
                 
-                <div className="space-y-3 mt-4">
+                <div className="space-y-2 mt-3">
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground flex items-center gap-2">
                             <DollarSign size={14} /> Valor Total
                         </span>
-                        <span className="font-bold text-lg">
+                        <span className="font-bold text-base">
                             {compra.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                         </span>
                     </div>
@@ -88,7 +89,7 @@ const CompraCard = ({ compra, index, onEdit, onDelete }) => {
                     </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-purple-200/20 flex gap-2">
+                <div className="mt-3 pt-3 border-t border-purple-200/20 flex gap-2">
                     {compra.link && (
                         <Button variant="outline" size="sm" className="flex-1" onClick={openLink}>
                             <Zap size={14} className="mr-2"/>Ver Produto

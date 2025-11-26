@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { useProjects } from '@/hooks/useProjects';
-import { Loader2, ArrowLeft, Play, GanttChart, List, Users } from 'lucide-react';
+import { Loader2, ArrowLeft, Play, GanttChart as GanttIcon, List, Users, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ProjectItems from '@/components/ProjectItems';
@@ -11,6 +11,7 @@ import ScheduleView from '@/components/ScheduleView';
 import ProjectTeam from '@/components/ProjectTeam';
 import PdfExport from '@/components/PdfExport';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { GanttChart } from '@/components/cronograma/GanttChart';
 
 const ProjectDetail = () => {
     const { id } = useParams();
@@ -73,13 +74,17 @@ const ProjectDetail = () => {
                 </div>
 
                 <Tabs defaultValue="schedule" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 max-w-lg">
-                        <TabsTrigger value="schedule"><GanttChart className="h-4 w-4 mr-2"/>Cronograma</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="schedule"><GanttIcon className="h-4 w-4 mr-2"/>Cronograma</TabsTrigger>
+                        <TabsTrigger value="gantt"><BarChart3 className="h-4 w-4 mr-2"/>Gantt Chart</TabsTrigger>
                         <TabsTrigger value="items"><List className="h-4 w-4 mr-2"/>Itens</TabsTrigger>
                         <TabsTrigger value="team"><Users className="h-4 w-4 mr-2"/>Equipe</TabsTrigger>
                     </TabsList>
                     <TabsContent value="schedule" className="mt-4">
                         <ScheduleView project={project} />
+                    </TabsContent>
+                    <TabsContent value="gantt" className="mt-4">
+                        <GanttChart projectId={project.id} />
                     </TabsContent>
                     <TabsContent value="items" className="mt-4">
                          <ProjectItems project={project} />

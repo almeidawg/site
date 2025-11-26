@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import {
   Dialog,
@@ -14,12 +14,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useEntities } from '@/hooks/useEntities';
 import { Loader2, Zap } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-
 const NovoPcDialog = ({ open, onOpenChange, compraToEdit, setCompras, compras }) => {
-  const [fornecedor, setFornecedor] = useState('Leroy Merlin');
+  const [fornecedorId, setFornecedorId] = useState('');
+  const [fornecedorNome, setFornecedorNome] = useState('');
+  const [siteFornecedor, setSiteFornecedor] = useState('');
   const [itens, setItens] = useState('');
   const [valorTotal, setValorTotal] = useState('');
   const [link, setLink] = useState('');
@@ -28,41 +30,50 @@ const NovoPcDialog = ({ open, onOpenChange, compraToEdit, setCompras, compras })
   const [isScraping, setIsScraping] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [clienteId, setClienteId] = useState('');
-  const [clientes, setClientes] = useLocalStorage('crm_clientes', []);
   const { toast } = useToast();
+
+  const { entities: clientesSupabase, loading: loadingClientes } = useEntities('cliente');
+  const { entities: fornecedoresSupabase, loading: loadingFornecedores } = useEntities('fornecedor');
+  const [entitiesLocal] = useLocalStorage('crm_entities', []);
+
+  const clientes = clientesSupabase.length > 0 ? clientesSupabase : entitiesLocal.filter(e => e.tipo === 'cliente');
+  const fornecedores = fornecedoresSupabase.length > 0 ? fornecedoresSupabase : entitiesLocal.filter(e => e.tipo === 'fornecedor');
 
   useEffect(() => {
     if (compraToEdit) {
-        setIsEditing(true);
-        const [parsedQty, ...descParts] = compraToEdit.itens.split('x ');
-        const qty = parseInt(parsedQty);
+      setIsEditing(true);
+      const [parsedQty, ...descParts] = compraToEdit.itens.split('x ');
+      const qty = parseInt(parsedQty);
 
-        setFornecedor(compraToEdit.fornecedor);
-        setItens(descParts.join('x '));
-        setValorTotal((compraToEdit.valor_total / qty).toFixed(2));
-        setLink(compraToEdit.link || '');
-        setImagemUrl(compraToEdit.imagem_url || '');
-        setQuantidade(qty || 1);
-        setClienteId(compraToEdit.cliente_id || '');
+      setFornecedorId(compraToEdit.fornecedor_id || '');
+      setFornecedorNome(compraToEdit.fornecedor || '');
+      setSiteFornecedor(compraToEdit.fornecedor_site || '');
+      setItens(descParts.join('x '));
+      setValorTotal((compraToEdit.valor_total / (qty || 1)).toFixed(2));
+      setLink(compraToEdit.link || '');
+      setImagemUrl(compraToEdit.imagem_url || '');
+      setQuantidade(qty || 1);
+      setClienteId(compraToEdit.cliente_id || '');
     } else {
-        setIsEditing(false);
-        setFornecedor('Leroy Merlin');
-        setItens('');
-        setValorTotal('');
-        setLink('');
-        setImagemUrl('');
-        setQuantidade(1);
-        setClienteId('');
+      setIsEditing(false);
+      setFornecedorId('');
+      setFornecedorNome('');
+      setSiteFornecedor('');
+      setItens('');
+      setValorTotal('');
+      setLink('');
+      setImagemUrl('');
+      setQuantidade(1);
+      setClienteId('');
     }
   }, [compraToEdit, open]);
 
-
   const handleScrape = async () => {
-    if (!link || !link.startsWith('https://www.leroymerlin.com.br')) {
+    if (!link) {
       toast({
         variant: 'destructive',
-        title: 'Link inválido',
-        description: 'Por favor, insira um link válido da Leroy Merlin.',
+        title: 'Informe o link',
+        description: 'Cole o link do produto para tentar importar os dados.',
       });
       return;
     }
@@ -73,21 +84,20 @@ const NovoPcDialog = ({ open, onOpenChange, compraToEdit, setCompras, compras })
       });
 
       if (error) throw error;
-      
-      setItens(data.description || '');
-      setValorTotal(data.price ? data.price.toFixed(2) : '');
-      setImagemUrl(data.image || '');
-      toast({
-        title: 'Dados Importados!',
-        description: 'Produto importado com sucesso. Verifique e ajuste a quantidade.',
-      });
 
+      if (data?.description) setItens(data.description);
+      if (data?.price) setValorTotal((data.price || 0).toFixed(2));
+      if (data?.image) setImagemUrl(data.image);
+
+      toast({
+        title: 'Dados importados!',
+        description: 'Verifique os campos e ajuste manualmente se precisar.',
+      });
     } catch (error) {
       console.error('Scraping error:', error);
       toast({
-        variant: 'destructive',
-        title: 'Falha ao buscar dados',
-        description: 'Não foi possível buscar as informações do produto. Tente novamente.',
+        title: 'Não conseguimos importar automaticamente',
+        description: 'Preencha manualmente descrição, valor e imagem. O link já está salvo.',
       });
     } finally {
       setIsScraping(false);
@@ -98,52 +108,67 @@ const NovoPcDialog = ({ open, onOpenChange, compraToEdit, setCompras, compras })
     e.preventDefault();
     const finalValorTotal = (parseFloat(valorTotal) || 0) * quantidade;
 
-    if (!fornecedor || !itens || !finalValorTotal) {
+    if (!clienteId) {
       toast({
         variant: 'destructive',
-        title: 'Campos obrigatórios',
-        description: 'Preencha Fornecedor, Itens e Valor.',
+        title: 'Selecione o cliente',
+        description: 'O pedido de compra precisa estar vinculado a um cliente.',
       });
       return;
     }
 
-    const clienteSelecionado = clientes.find(c => c.id === clienteId);
+    if (!itens || !finalValorTotal) {
+      toast({
+        variant: 'destructive',
+        title: 'Campos obrigatórios',
+        description: 'Preencha Itens e Valor.',
+      });
+      return;
+    }
+
+    const clienteSelecionado = clientes.find((c) => c.id === clienteId);
+    const fornecedorSelecionado = fornecedores.find((f) => f.id === fornecedorId);
+    const fornecedorFinal = fornecedorSelecionado?.nome_razao_social || fornecedorNome || '';
 
     if (isEditing) {
-        const pedidoAtualizado = {
-            ...compraToEdit,
-            fornecedor,
-            itens: `${quantidade}x ${itens}`,
-            valor_total: finalValorTotal,
-            link,
-            imagem_url: imagemUrl,
-            cliente_id: clienteId,
-            cliente_nome: clienteSelecionado?.nome || clienteSelecionado?.razao_social || '',
-        };
-        setCompras(prev => prev.map(c => c.id === compraToEdit.id ? pedidoAtualizado : c));
-        toast({ title: 'Pedido de Compra Atualizado!' });
+      const pedidoAtualizado = {
+        ...compraToEdit,
+        fornecedor_id: fornecedorId || null,
+        fornecedor: fornecedorFinal,
+        fornecedor_site: siteFornecedor || null,
+        itens: `${quantidade}x ${itens}`,
+        valor_total: finalValorTotal,
+        link,
+        imagem_url: imagemUrl,
+        cliente_id: clienteId,
+        cliente_nome: clienteSelecionado?.nome_razao_social || clienteSelecionado?.nome || '',
+      };
+      setCompras((prev) => prev.map((c) => (c.id === compraToEdit.id ? pedidoAtualizado : c)));
+      toast({ title: 'Pedido de Compra Atualizado!' });
     } else {
-        const novoPedido = {
-          id: `pc-${Date.now()}`,
-          numero: (compras.length + 1).toString().padStart(4, '0'),
-          fornecedor,
-          itens: `${quantidade}x ${itens}`,
-          valor_total: finalValorTotal,
-          link,
-          imagem_url: imagemUrl,
-          status: 'pendente',
-          data_entrega: new Date(new Date().setDate(new Date().getDate() + 7)),
-          cliente_id: clienteId,
-          cliente_nome: clienteSelecionado?.nome || clienteSelecionado?.razao_social || '',
-        };
+      const novoPedido = {
+        id: `pc-${Date.now()}`,
+        numero: (compras.length + 1).toString().padStart(4, '0'),
+        fornecedor_id: fornecedorId || null,
+        fornecedor: fornecedorFinal || 'Fornecedor não informado',
+        fornecedor_site: siteFornecedor || null,
+        itens: `${quantidade}x ${itens}`,
+        valor_total: finalValorTotal,
+        link,
+        imagem_url: imagemUrl,
+        status: 'pendente',
+        data_entrega: new Date(new Date().setDate(new Date().getDate() + 7)),
+        cliente_id: clienteId,
+        cliente_nome: clienteSelecionado?.nome_razao_social || clienteSelecionado?.nome || '',
+      };
 
-        setCompras([...compras, novoPedido]);
-        toast({
-          title: 'Pedido de Compra Criado!',
-          description: `O PC #${novoPedido.numero} foi registrado com sucesso.`,
-        });
+      setCompras([...compras, novoPedido]);
+      toast({
+        title: 'Pedido de Compra Criado!',
+        description: `O PC #${novoPedido.numero} foi registrado com sucesso.`,
+      });
     }
-    
+
     onOpenChange(false);
   };
 
@@ -153,36 +178,59 @@ const NovoPcDialog = ({ open, onOpenChange, compraToEdit, setCompras, compras })
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar Pedido de Compra' : 'Novo Pedido de Compra'}</DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Edite os detalhes do pedido.' : 'Cole o link do produto da Leroy Merlin para importar os dados ou preencha manualmente.'}
+            {isEditing ? 'Edite os detalhes do pedido.' : 'Cole qualquer link de produto para tentar importar dados ou preencha manualmente.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-             <div className="space-y-2">
-              <Label htmlFor="cliente">Vincular ao Cliente</Label>
-               <Select onValueChange={setClienteId} value={clienteId}>
+            <div className="space-y-2">
+              <Label htmlFor="cliente">Vincular ao Cliente *</Label>
+              <Select onValueChange={setClienteId} value={clienteId} disabled={loadingClientes}>
                 <SelectTrigger>
-                    <SelectValue placeholder="Selecione um cliente" />
+                  <SelectValue placeholder={loadingClientes ? 'Carregando clientes...' : 'Selecione um cliente'} />
                 </SelectTrigger>
                 <SelectContent>
-                    {clientes.map(cliente => (
-                        <SelectItem key={cliente.id} value={cliente.id}>
-                            {cliente.nome || cliente.razao_social}
-                        </SelectItem>
-                    ))}
+                  {clientes.map((cliente) => (
+                    <SelectItem key={cliente.id} value={cliente.id}>
+                      {cliente.nome_razao_social || cliente.nome}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="link">Link do Produto (Leroy Merlin)</Label>
+              <Label htmlFor="fornecedor">Fornecedor (opcional)</Label>
+              <Select onValueChange={(v) => { setFornecedorId(v); const found = fornecedores.find(f => f.id === v); setFornecedorNome(found?.nome_razao_social || found?.nome || ''); }} value={fornecedorId} disabled={loadingFornecedores}>
+                <SelectTrigger>
+                  <SelectValue placeholder={loadingFornecedores ? 'Carregando fornecedores...' : 'Selecione um fornecedor ou deixe em branco'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {fornecedores.map((forn) => (
+                    <SelectItem key={forn.id} value={forn.id}>
+                      {forn.nome_razao_social || forn.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                id="fornecedorNome"
+                placeholder="Ou digite o fornecedor"
+                value={fornecedorNome}
+                onChange={(e) => { setFornecedorNome(e.target.value); setFornecedorId(''); }}
+              />
+              <Input
+                id="siteFornecedor"
+                placeholder="Site do fornecedor (opcional)"
+                value={siteFornecedor}
+                onChange={(e) => setSiteFornecedor(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="link">Link do Produto</Label>
               <div className="flex gap-2">
-                <Input
-                  id="link"
-                  placeholder="https://www.leroymerlin.com.br/..."
-                  value={link}
-                  onChange={(e) => setLink(e.target.value)}
-                />
+                <Input id="link" placeholder="https://exemplo.com/produto/..." value={link} onChange={(e) => setLink(e.target.value)} />
                 <Button type="button" size="icon" onClick={handleScrape} disabled={isScraping}>
                   {isScraping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
                 </Button>
@@ -194,12 +242,7 @@ const NovoPcDialog = ({ open, onOpenChange, compraToEdit, setCompras, compras })
                 <img src={imagemUrl} alt="Produto importado" className="w-24 h-24 object-contain rounded-md" />
               </div>
             )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="fornecedor">Fornecedor</Label>
-              <Input id="fornecedor" value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} />
-            </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="itens">Descrição do Item</Label>
               <Textarea id="itens" placeholder="Ex: Tinta Branca Acrílica" value={itens} onChange={(e) => setItens(e.target.value)} />
@@ -217,11 +260,13 @@ const NovoPcDialog = ({ open, onOpenChange, compraToEdit, setCompras, compras })
             </div>
 
             <div className="text-right font-bold text-lg">
-                Total: {((parseFloat(valorTotal) || 0) * quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              Total: {((parseFloat(valorTotal) || 0) * quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
             <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Salvar Pedido'}</Button>
           </DialogFooter>
         </form>

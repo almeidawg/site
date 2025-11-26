@@ -1,6 +1,7 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { createLogger, defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 import inlineEditPlugin from './plugins/visual-editor/vite-plugin-react-inline-editor.js';
 import editModeDevPlugin from './plugins/visual-editor/vite-plugin-edit-mode.js';
 import iframeRouteRestorationPlugin from './plugins/vite-plugin-iframe-route-restoration.js';
@@ -261,5 +262,12 @@ export default defineConfig({
 				'@babel/types'
 			]
 		}
+	},
+	test: {
+		globals: true,
+		environment: 'jsdom',
+		setupFiles: './src/test/setupTests.js',
+		css: true,
+		exclude: [...configDefaults.exclude, 'e2e/**'],
 	}
 });

@@ -2,6 +2,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
+import { AlertasPagamentoPopup } from "./components/financeiro/AlertasPagamentoPopup";
 
 // Páginas de Financeiro
 import FinanceiroPage from "./modules/financeiro/pages/FinanceiroPage";

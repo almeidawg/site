@@ -49,6 +49,8 @@ const toNull = (v) =>
         especificador: toNull(raw.especificador),
         drive_link: toNull(raw.drive_link),
         responsavel_id: toNull(raw.responsavel_id),
+        obra_mesmo_endereco: raw.obra_mesmo_endereco ?? true,
+        endereco_obra: raw.obra_mesmo_endereco === false ? (raw.endereco_obra || null) : null,
       };
 
       Object.keys(payload).forEach((k) => {

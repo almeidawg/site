@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Button } from '@/components/ui/button';
 import { FileText, Plus, Loader2, HardHat, Building, UserCheck, Construction, Trash2 } from 'lucide-react';
 import NovoContratoDialog from '@/components/contratos/NovoContratoDialog';
@@ -9,6 +8,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { getWhatsAppLink } from '@/lib/whatsapp';
 import ActionIcons from '@/components/shared/ActionIcons';
 import { cn } from '@/lib/utils';
+import { useContracts } from '@/hooks/useContracts';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Contratos = () => {
-  const [contratos, setContratos] = useLocalStorage('crm_contratos', []);
+  const { contracts, loading: loadingContracts, refetch } = useContracts();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(null); // Store ID of contract being generated
   const [contratoToDelete, setContratoToDelete] = useState(null);
@@ -33,9 +33,15 @@ const Contratos = () => {
     setIsAlertOpen(true);
   };
 
-  const handleDelete = () => {
-    setContratos(prev => prev.filter(c => c.id !== contratoToDelete.id));
-    toast({ title: 'Contrato Excluído!', variant: 'destructive' });
+  const handleDelete = async () => {
+    if (!contratoToDelete) return;
+    const { error } = await supabase.from('contratos').delete().eq('id', contratoToDelete.id);
+    if (error) {
+      toast({ title: 'Erro ao excluir contrato', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Contrato Excluído!', variant: 'destructive' });
+      refetch();
+    }
     setIsAlertOpen(false);
     setContratoToDelete(null);
   };
@@ -138,7 +144,11 @@ const Contratos = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl p-6 shadow-sm"
         >
-          {contratos.length === 0 ? (
+          {loadingContracts ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-10 w-10 animate-spin text-slate-400" />
+            </div>
+          ) : contracts.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="mx-auto h-12 w-12 text-gray-400" />
               <p className="mt-4 text-muted-foreground">Nenhum contrato gerado ainda.</p>
@@ -146,8 +156,10 @@ const Contratos = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {contratos.map((contrato, index) => {
-                const { icon, tagClass } = getContratoStyle(contrato.tipoContrato);
+              {contracts.map((contrato, index) => {
+                const contractTipo = contrato.tipo;
+                const clienteNome = contrato.cliente?.nome_razao_social || contrato.cliente?.nome || 'Cliente';
+                const { icon, tagClass } = getContratoStyle(contractTipo);
                 return (
                   <motion.div
                     key={contrato.id}
@@ -156,18 +168,18 @@ const Contratos = () => {
                     transition={{ delay: index * 0.1 }}
                     className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-gray-200"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       {icon}
                       <div>
-                        <p className="font-semibold">{getTipoContratoLabel(contrato.tipoContrato)} - {contrato.targetName}</p>
+                        <p className="font-semibold">{getTipoContratoLabel(contractTipo)} - {clienteNome}</p>
                         <p className="text-sm text-muted-foreground">
-                          Gerado em: {new Date(contrato.dataCriacao).toLocaleDateString()}
+                          Gerado em: {new Date(contrato.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={cn('inline-block px-3 py-1 text-xs font-medium rounded-full', tagClass)}>
-                        {getTipoContratoLabel(contrato.tipoContrato)}
+                        {getTipoContratoLabel(contractTipo)}
                       </span>
                       {isGeneratingPdf === contrato.id ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                         <ActionIcons
@@ -187,7 +199,7 @@ const Contratos = () => {
         <NovoContratoDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          setContratos={setContratos}
+          onContratoCreated={refetch}
         />
       </div>
     </>

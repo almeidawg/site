@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite --host :: --port 3000",
     "build": "node tools/generate-llms.js || true && vite build",
-    "preview": "vite preview --host :: --port 3000"
+    "preview": "vite preview --host :: --port 3000",
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "ci:validate": "npm run lint && npm run test"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.3.1",
@@ -35,9 +39,10 @@
     "cmdk": "^0.2.0",
     "date-fns": "^3.6.0",
     "framer-motion": "^10.16.4",
+    "frappe-gantt": "^1.0.4",
     "gantt-task-react": "^0.3.9",
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
+    "jspdf": "^3.0.4",
     "lucide-react": "^0.285.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -52,6 +57,9 @@
     "@babel/parser": "^7.27.0",
     "@babel/traverse": "^7.27.0",
     "@babel/types": "^7.27.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
     "@types/node": "^20.8.3",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
@@ -59,9 +67,11 @@
     "autoprefixer": "^10.4.16",
     "eslint": "^8.57.1",
     "eslint-config-react-app": "^7.0.1",
+    "jsdom": "^25.0.1",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.3",
     "terser": "^5.39.0",
-    "vite": "^4.4.5"
+    "vite": "^7.2.4",
+    "vitest": "^2.1.4"
   }
 }

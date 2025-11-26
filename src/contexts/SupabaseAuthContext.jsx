@@ -17,20 +17,25 @@ export const AuthProvider = ({ children }) => {
       return;
     }
     
-    const [profileRes, orgRes] = await Promise.all([
+    const [profileRes, perfisRes] = await Promise.all([
       supabase.from('user_profiles').select('*').eq('user_id', user.id).maybeSingle(),
-      supabase.from('usuarios_perfis').select('org_id').eq('user_id', user.id).maybeSingle()
+      supabase.from('usuarios_perfis').select('perfil, permissoes, org_id').eq('user_id', user.id).maybeSingle()
     ]);
     
     if (profileRes.error && profileRes.error.code !== 'PGRST116') {
       console.error('Error fetching profile:', profileRes.error.message);
     }
-    setProfile(profileRes.data);
-
-    if (orgRes.error && orgRes.error.code !== 'PGRST116') {
-      console.error('Error fetching org:', orgRes.error.message);
+    if (perfisRes.error && perfisRes.error.code !== 'PGRST116') {
+      console.error('Error fetching perfil:', perfisRes.error.message);
     }
-    setOrgId(orgRes.data?.org_id || null);
+
+    setProfile({
+      ...profileRes.data,
+      perfil: perfisRes.data?.perfil,
+      permissoes: perfisRes.data?.permissoes,
+      org_id: perfisRes.data?.org_id,
+    });
+    setOrgId(perfisRes.data?.org_id || null);
   };
 
   useEffect(() => {

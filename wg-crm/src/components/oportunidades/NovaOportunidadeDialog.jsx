@@ -37,6 +37,9 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportuni
     valor_previsto: '',
     responsavel_id: '',
     servicos_contratados: [],
+    arquitetura_status: '',
+    engenharia_status: '',
+    marcenaria_status: '',
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -52,6 +55,9 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportuni
         valor_previsto: oportunidadeToEdit.valor_previsto || '',
         responsavel_id: oportunidadeToEdit.responsavel_id || '',
         servicos_contratados: oportunidadeToEdit.servicos_contratados || [],
+        arquitetura_status: oportunidadeToEdit.arquitetura_status || '',
+        engenharia_status: oportunidadeToEdit.engenharia_status || '',
+        marcenaria_status: oportunidadeToEdit.marcenaria_status || '',
       });
     } else {
       setIsEditing(false);
@@ -169,8 +175,58 @@ const NovaOportunidadeDialog = ({ open, onOpenChange, setOportunidades, oportuni
                       {service.label}
                    </ToggleGroupItem>
                 ))}
-              </ToggleGroup>
+            </ToggleGroup>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label>Arquitetura</Label>
+              <Select
+                onValueChange={(value) => handleSelectChange('arquitetura_status', value)}
+                value={formData.arquitetura_status}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nao_previsto">Não previsto</SelectItem>
+                  <SelectItem value="em_negociacao">Em negociação</SelectItem>
+                  <SelectItem value="confirmado">Confirmado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+            <div className="space-y-1.5">
+              <Label>Engenharia</Label>
+              <Select
+                onValueChange={(value) => handleSelectChange('engenharia_status', value)}
+                value={formData.engenharia_status}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nao_previsto">Não previsto</SelectItem>
+                  <SelectItem value="em_negociacao">Em negociação</SelectItem>
+                  <SelectItem value="confirmado">Confirmado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Marcenaria</Label>
+              <Select
+                onValueChange={(value) => handleSelectChange('marcenaria_status', value)}
+                value={formData.marcenaria_status}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nao_previsto">Não previsto</SelectItem>
+                  <SelectItem value="em_negociacao">Em negociação</SelectItem>
+                  <SelectItem value="confirmado">Confirmado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
             <div className="space-y-2">
               <Label htmlFor="valor_previsto">Valor Previsto (R$) *</Label>
               <Input id="valor_previsto" type="number" value={formData.valor_previsto} onChange={handleInputChange} placeholder="50000" />

@@ -13,19 +13,18 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, Search, User, Briefcase, Truck, Building } from 'lucide-react';
+import { Loader2, Save, Search, User, Briefcase, Truck, Building, Camera, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useEntities } from '@/hooks/useEntities.js';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import AvatarUpload from '@/components/shared/AvatarUpload';
 
-const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit, onClientCreated }) => {
+const NovaPessoaDialog = ({ open, onOpenChange, onSave, entityToEdit }) => {
   const { toast } = useToast();
+  const { createEntity, updateEntity } = useEntities();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  const [procedenciasCadastradas] = useLocalStorage('crm_config_procedencias', []);
-  const [equipesCadastradas] = useLocalStorage('crm_config_equipes', []);
-  const [oportunidades, setOportunidades] = useLocalStorage('crm_oportunidades', []);
 
   const initialFormState = {
     tipo: 'cliente',
@@ -38,20 +37,16 @@ const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit, onCli
     telefone: '',
     setor_categoria: '',
     ativo: true,
-    endereco: {
-      cep: '',
-      logradouro: '',
-      numero: '',
-      complemento: '',
-      bairro: '',
-      cidade: '',
-      uf: '',
-    },
+    endereco: { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '' },
+    endereco_obra: { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '' },
     dados_bancarios: [{ banco: '', agencia: '', conta: '', titular: '', cpf_cnpj_titular: '', pix_chave: '', pix_tipo: '' }],
     observacoes: '',
     // campos específicos de cliente
     procedencia: '',
     equipe: '',
+    avatar_url: '',
+    avatar_source: '',
+    obra_mesmo_endereco: true,
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -59,7 +54,23 @@ const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit, onCli
   useEffect(() => {
     if (entityToEdit) {
       setIsEditing(true);
-      setFormData({ ...initialFormState, ...entityToEdit });
+      const entityWithAddress = {
+        ...initialFormState,
+        ...entityToEdit,
+        endereco: entityToEdit.endereco || {
+          cep: entityToEdit.cep || '',
+          logradouro: entityToEdit.logradouro || '',
+          numero: entityToEdit.numero || '',
+          complemento: entityToEdit.complemento || '',
+          bairro: entityToEdit.bairro || '',
+          cidade: entityToEdit.cidade || '',
+          uf: entityToEdit.estado || entityToEdit.uf || '',
+        },
+        endereco_obra: entityToEdit.endereco_obra || initialFormState.endereco_obra,
+        obra_mesmo_endereco: entityToEdit.obra_mesmo_endereco ?? true,
+        avatar_url: entityToEdit.avatar_url || '',
+      };
+      setFormData(entityWithAddress);
     } else {
       setIsEditing(false);
       setFormData(initialFormState);
@@ -81,6 +92,17 @@ const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit, onCli
         ...prev,
         endereco: {
             ...prev.endereco,
+            [id]: value
+        }
+    }));
+  };
+
+  const handleObraAddressChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+        ...prev,
+        endereco_obra: {
+            ...prev.endereco_obra,
             [id]: value
         }
     }));
@@ -146,45 +168,84 @@ const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit, onCli
     setLoading(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.nome_razao_social) {
       toast({ title: "Erro", description: "Nome/Razão Social é obrigatório.", variant: "destructive" });
       return;
     }
-    
-    if (isEditing) {
-      setEntities(prev => prev.map(c => c.id === entityToEdit.id ? formData : c));
-      toast({ title: "Sucesso!", description: "Cadastro atualizado." });
-    } else {
-      const newId = `ent_${Date.now()}`;
-      const newEntity = { ...formData, id: newId };
-      setEntities(prev => [newEntity, ...prev]);
 
-      if (newEntity.tipo === 'cliente') {
-        const newOportunidade = {
-          id: `op-${Date.now()}`,
-          nome: `Oportunidade - ${newEntity.nome_fantasia || newEntity.nome_razao_social}`,
-          cliente_id: newId,
-          cliente_nome: newEntity.nome_fantasia || newEntity.nome_razao_social,
-          valor_previsto: 0,
-          probabilidade: 25,
-          fase: 'qualificacao',
-          status: 'ativa'
-        };
-        setOportunidades(prev => [newOportunidade, ...prev]);
-        toast({ title: "Sucesso!", description: "Novo cliente e oportunidade criados." });
+    setLoading(true);
 
-        // Chamar callback para refetch dos clientes do banco
-        if (onClientCreated) {
-          onClientCreated();
-        }
+    try {
+      // Preparar dados para enviar ao Supabase
+      const entityData = {
+        tipo: formData.tipo,
+        tipo_pessoa: formData.tipo_pessoa.toUpperCase(), // PF ou PJ
+        nome: formData.nome_razao_social, // Campo "nome" no banco
+        nome_fantasia: formData.nome_fantasia,
+        cpf_cnpj: formData.cpf_cnpj,
+        rg_ie: formData.rg_ie,
+        email: formData.email,
+        telefone: formData.telefone,
+
+        // Endereço - campos separados
+        cep: formData.endereco.cep,
+        logradouro: formData.endereco.logradouro,
+        numero: formData.endereco.numero,
+        complemento: formData.endereco.complemento,
+        bairro: formData.endereco.bairro,
+        cidade: formData.endereco.cidade,
+        estado: formData.endereco.uf,
+
+        // Observações
+        observacoes: formData.observacoes,
+
+        // Dados adicionais (JSONB) - campos específicos de cliente
+        dados: {
+          procedencia: formData.procedencia,
+          equipe: formData.equipe,
+          setor_categoria: formData.setor_categoria,
+          dados_bancarios: formData.dados_bancarios
+        },
+        avatar_url: formData.avatar_url,
+        avatar_source: formData.avatar_source || null,
+        obra_mesmo_endereco: formData.obra_mesmo_endereco,
+        endereco_obra: formData.obra_mesmo_endereco ? null : formData.endereco_obra
+      };
+
+      if (isEditing) {
+        await updateEntity(entityToEdit.id, entityData);
+        toast({ title: "Sucesso!", description: "Cadastro atualizado." });
       } else {
-        toast({ title: "Sucesso!", description: `Novo ${newEntity.tipo} cadastrado.` });
-      }
-    }
+        const newEntity = await createEntity(entityData);
 
-    onOpenChange(false);
+        if (newEntity.tipo === 'cliente') {
+          // TODO: Criar oportunidade vinculada quando implementar módulo de oportunidades com Supabase
+          toast({ title: "Sucesso!", description: "Novo cliente cadastrado." });
+        } else {
+          toast({ title: "Sucesso!", description: `Novo ${newEntity.tipo} cadastrado.` });
+        }
+      }
+
+      // Chamar callback para refetch da lista
+      if (onSave) {
+        onSave();
+      }
+
+      onOpenChange(false);
+      setFormData(initialFormState); // Limpar formulário
+
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderFieldsByTipo = () => {
@@ -232,6 +293,23 @@ const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit, onCli
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="py-4 space-y-4">
+              {/* Avatar Upload Component */}
+              <div className="flex justify-center">
+                <AvatarUpload
+                  currentAvatarUrl={formData.avatar_url}
+                  onAvatarChange={(url, source) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      avatar_url: url,
+                      avatar_source: source || 'upload'
+                    }));
+                  }}
+                  entityId={entityToEdit?.id || `new_${Date.now()}`}
+                  bucket="avatars"
+                  size="lg"
+                  disabled={loading}
+                />
+              </div>
               <div className="flex justify-center">
                   <Select onValueChange={(val) => handleSelectChange('tipo', val)} value={formData.tipo} disabled={isEditing}>
                       <SelectTrigger className="w-[280px]">
@@ -284,19 +362,46 @@ const NovaPessoaDialog = ({ open, onOpenChange, setEntities, entityToEdit, onCli
                     <div className="space-y-2 md:col-span-2">
                         <Label>CEP</Label>
                         <div className="flex gap-1">
-                            <Input id="cep" value={formData.endereco.cep} onChange={handleAddressChange} />
-                            <Button type="button" size="icon" variant="outline" onClick={() => handleBuscaCep(formData.endereco.cep)} disabled={loading}>
+                            <Input id="cep" value={formData.endereco?.cep || ''} onChange={handleAddressChange} />
+                            <Button type="button" size="icon" variant="outline" onClick={() => handleBuscaCep(formData.endereco?.cep)} disabled={loading}>
                                 {loading ? <Loader2 className="animate-spin" /> : <Search />}
                             </Button>
                         </div>
                     </div>
-                    <div className="space-y-2"><Label>Estado</Label><Input id="uf" value={formData.endereco.uf} onChange={handleAddressChange} /></div>
-                    <div className="space-y-2"><Label>Cidade</Label><Input id="cidade" value={formData.endereco.cidade} onChange={handleAddressChange} /></div>
-                    <div className="space-y-2 md:col-span-2"><Label>Endereço</Label><Input id="logradouro" value={formData.endereco.logradouro} onChange={handleAddressChange} /></div>
-                    <div className="space-y-2"><Label>Número</Label><Input id="numero" value={formData.endereco.numero} onChange={handleAddressChange} /></div>
-                    <div className="space-y-2"><Label>Bairro</Label><Input id="bairro" value={formData.endereco.bairro} onChange={handleAddressChange} /></div>
-                    <div className="space-y-2 md:col-span-4"><Label>Complemento</Label><Input id="complemento" value={formData.endereco.complemento} onChange={handleAddressChange} /></div>
+                    <div className="space-y-2"><Label>Estado</Label><Input id="uf" value={formData.endereco?.uf || ''} onChange={handleAddressChange} /></div>
+                    <div className="space-y-2"><Label>Cidade</Label><Input id="cidade" value={formData.endereco?.cidade || ''} onChange={handleAddressChange} /></div>
+                    <div className="space-y-2 md:col-span-2"><Label>Endereço</Label><Input id="logradouro" value={formData.endereco?.logradouro || ''} onChange={handleAddressChange} /></div>
+                    <div className="space-y-2"><Label>Número</Label><Input id="numero" value={formData.endereco?.numero || ''} onChange={handleAddressChange} /></div>
+                    <div className="space-y-2"><Label>Bairro</Label><Input id="bairro" value={formData.endereco?.bairro || ''} onChange={handleAddressChange} /></div>
+                    <div className="space-y-2 md:col-span-4"><Label>Complemento</Label><Input id="complemento" value={formData.endereco?.complemento || ''} onChange={handleAddressChange} /></div>
                 </div>
+                {formData.tipo === 'cliente' && (
+                  <div className="mt-6 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="obra_mesmo_endereco"
+                        type="checkbox"
+                        checked={formData.obra_mesmo_endereco}
+                        onChange={(e) => setFormData(prev => ({ ...prev, obra_mesmo_endereco: e.target.checked }))}
+                      />
+                      <Label htmlFor="obra_mesmo_endereco">Projeto é no mesmo endereço?</Label>
+                    </div>
+                    {!formData.obra_mesmo_endereco && (
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border rounded-lg p-4 bg-muted/30">
+                        <div className="space-y-2 md:col-span-2">
+                          <Label>CEP (Obra)</Label>
+                          <Input id="cep" value={formData.endereco_obra?.cep || ''} onChange={(e) => handleObraAddressChange({ target: { id: 'cep', value: e.target.value }})} />
+                        </div>
+                        <div className="space-y-2"><Label>Estado</Label><Input id="uf" value={formData.endereco_obra?.uf || ''} onChange={(e) => handleObraAddressChange({ target: { id: 'uf', value: e.target.value }})} /></div>
+                        <div className="space-y-2"><Label>Cidade</Label><Input id="cidade" value={formData.endereco_obra?.cidade || ''} onChange={(e) => handleObraAddressChange({ target: { id: 'cidade', value: e.target.value }})} /></div>
+                        <div className="space-y-2 md:col-span-2"><Label>Endereço da Obra</Label><Input id="logradouro" value={formData.endereco_obra?.logradouro || ''} onChange={(e) => handleObraAddressChange({ target: { id: 'logradouro', value: e.target.value }})} /></div>
+                        <div className="space-y-2"><Label>Número</Label><Input id="numero" value={formData.endereco_obra?.numero || ''} onChange={(e) => handleObraAddressChange({ target: { id: 'numero', value: e.target.value }})} /></div>
+                        <div className="space-y-2"><Label>Bairro</Label><Input id="bairro" value={formData.endereco_obra?.bairro || ''} onChange={(e) => handleObraAddressChange({ target: { id: 'bairro', value: e.target.value }})} /></div>
+                        <div className="space-y-2 md:col-span-4"><Label>Complemento</Label><Input id="complemento" value={formData.endereco_obra?.complemento || ''} onChange={(e) => handleObraAddressChange({ target: { id: 'complemento', value: e.target.value }})} /></div>
+                      </div>
+                    )}
+                  </div>
+                )}
             </TabsContent>
 
              <TabsContent value="financeiro" className="py-4">

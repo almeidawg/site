@@ -19,6 +19,7 @@ import CriarUsuarioSenha from '@/components/usuarios/CriarUsuarioSenha';
 import EditarUsuarioDialog from '@/components/usuarios/EditarUsuarioDialog';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { describeModules } from '@/lib/userModules';
 
 const Usuarios = () => {
     const { profile, orgId, loading: authLoading } = useAuth();
@@ -146,7 +147,9 @@ const Usuarios = () => {
                 </div>
             </div>
             <div className="space-y-3">
-                {usuarios.map((user, index) => (
+                {usuarios.map((user, index) => {
+                    const moduleBadges = describeModules(user.permissoes?.modules);
+                    return (
                     <motion.div
                         key={user.id}
                         initial={{ opacity: 0, x: -20 }}
@@ -164,6 +167,17 @@ const Usuarios = () => {
                             <div>
                                 <p className="font-semibold">{user.nome || 'Nome não definido'}</p>
                                 <p className="text-sm text-muted-foreground">{user.email || 'E-mail não disponível'}</p>
+                                <div className="mt-1 flex flex-wrap gap-1 text-[11px]">
+                                    {moduleBadges.length > 0 ? (
+                                        moduleBadges.map((label) => (
+                                            <span key={label} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 font-semibold uppercase tracking-wide text-slate-700">
+                                                {label}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span className="text-xs text-muted-foreground">Sem módulos habilitados</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -173,10 +187,16 @@ const Usuarios = () => {
                             <span className={`px-3 py-1 text-xs font-medium rounded-full ${user.email_confirmed_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                 {user.email_confirmed_at ? 'Ativo' : 'Pendente'}
                             </span>
+                            {user.permissoes?.needsPasswordChange && (
+                                <span className="px-3 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">
+                                    Troca pendente
+                                </span>
+                            )}
                             <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(user)}><Edit className="h-4 w-4" /></Button>
                         </div>
                     </motion.div>
-                ))}
+                    );
+                })}
             </div>
             
             {isEditOpen && editUser && (

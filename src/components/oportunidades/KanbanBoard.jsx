@@ -90,8 +90,8 @@ const KanbanBoard = ({ boardId }) => {
       setColumns(columnsData || []);
 
       const { data: cardsData, error: cardsError } = await supabase
-        .from('kanban_cards')
-        .select('*, cliente:cliente_id(nome_razao_social)')
+        .from('v_kanban_cards')
+        .select('id, coluna_id, titulo, descricao, valor, ordem, responsavel_id, entity_id, cliente_nome, payload, servicos_contratados, fase, board_id, created_at')
         .eq('board_id', currentBoardId)
         .is('deleted_at', null);
 

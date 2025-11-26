@@ -15,14 +15,16 @@ import React, { useState, useEffect } from 'react';
 
     const NovaPessoaDialog = ({ open, onOpenChange, onSave, entityToEdit, defaultTipo }) => {
       const { toast } = useToast();
-      const [isEditing, setIsEditing] = useState(false);
-      const [loading, setLoading] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [loading, setLoading] = useState(false);
       const [procedencias, setProcedencias] = useState([]);
       const [users, setUsers] = useState([]);
       const [especificadores, setEspecificadores] = useState([]);
 
-      const initialFormState = {
-        tipo: defaultTipo || 'cliente',
+      const normalizeEndereco = (end) => (end && typeof end === 'object' ? end : {});
+
+      const buildInitialFormState = (tipo = 'cliente') => ({
+        tipo: tipo || 'cliente',
         tipo_pessoa: 'pf',
         nome_razao_social: '',
         nome_fantasia: '',
@@ -31,7 +33,9 @@ import React, { useState, useEffect } from 'react';
         email: '',
         telefone: '',
         ativo: true,
+        obra_mesmo_endereco: true,
         endereco: {},
+        endereco_obra: {},
         observacoes: '',
         procedencia_id: null,
         responsavel_id: null,
@@ -41,9 +45,11 @@ import React, { useState, useEffect } from 'react';
         arquitetura: false,
         engenharia: false,
         marcenaria: false,
-      };
+      });
 
-      const [formData, setFormData] = useState(initialFormState);
+      const [formData, setFormData] = useState(buildInitialFormState(defaultTipo));
+      const safeEndereco = (formData?.endereco && typeof formData.endereco === 'object') ? formData.endereco : {};
+      const safeEnderecoObra = (formData?.endereco_obra && typeof formData.endereco_obra === 'object') ? formData.endereco_obra : {};
 
       const handleBuscaCnpj = async (cnpj) => {
         if (!cnpj || cnpj.length < 14) return;
@@ -92,14 +98,43 @@ import React, { useState, useEffect } from 'react';
           if (especificadoresError) toast({ title: "Erro ao buscar especificadores", variant: "destructive" });
           else setEspecificadores(especificadoresData || []);
 
+          const baseEntityState = entityToEdit
+            ? {
+                ...buildInitialFormState(defaultTipo),
+                ...entityToEdit,
+                nome_razao_social: entityToEdit.nome || entityToEdit.nome_razao_social,
+                tipo: entityToEdit.tipo || defaultTipo,
+                dados_bancarios: entityToEdit.dados_bancarios || [],
+                endereco: normalizeEndereco(entityToEdit.endereco),
+                endereco_obra: normalizeEndereco(entityToEdit.endereco_obra),
+                obra_mesmo_endereco: entityToEdit.obra_mesmo_endereco ?? true,
+              }
+            : { ...buildInitialFormState(defaultTipo), endereco: {}, endereco_obra: {}, obra_mesmo_endereco: true };
+
+          setFormData(baseEntityState);
+          setIsEditing(!!entityToEdit);
+
           if (entityToEdit) {
-            setIsEditing(true);
-            const { data: fullEntity, error: entityError } = await supabase.from('v_entities_full').select('*, dados_bancarios:bank_accounts(*)').eq('id', entityToEdit.id).single();
-            if(entityError) toast({ title: "Erro ao buscar dados completos", variant: "destructive" });
-            else setFormData({ ...initialFormState, ...fullEntity, tipo: fullEntity.tipo || defaultTipo });
-          } else {
-            setIsEditing(false);
-            setFormData({...initialFormState, tipo: defaultTipo});
+            const { data: fullEntity, error: entityError } = await supabase
+              .from('v_entities_full')
+              .select('*, dados_bancarios:bank_accounts(*)')
+              .eq('id', entityToEdit.id)
+              .single();
+
+            if (entityError) {
+              toast({ title: "Erro ao buscar dados completos", variant: "destructive" });
+            } else {
+              setFormData({
+                ...buildInitialFormState(defaultTipo),
+                ...fullEntity,
+                nome_razao_social: fullEntity.nome || fullEntity.nome_razao_social,
+                tipo: fullEntity.tipo || defaultTipo,
+                dados_bancarios: fullEntity.dados_bancarios || [],
+                endereco: normalizeEndereco(fullEntity.endereco),
+                endereco_obra: normalizeEndereco(fullEntity.endereco_obra),
+                obra_mesmo_endereco: fullEntity.obra_mesmo_endereco ?? true,
+              });
+            }
           }
           setLoading(false);
         };
@@ -113,6 +148,18 @@ import React, { useState, useEffect } from 'react';
         }
       }, [defaultTipo, open])
 
+      // Garantia extra: nunca deixar endereco/endereco_obra nulos quando o dialog abrir
+      useEffect(() => {
+        if (open) {
+          setFormData(prev => ({
+            ...prev,
+            endereco: normalizeEndereco(prev.endereco),
+            endereco_obra: normalizeEndereco(prev.endereco_obra),
+            obra_mesmo_endereco: prev.obra_mesmo_endereco ?? true,
+          }));
+        }
+      }, [open]);
+
       const handleInputChange = (e) => {
         const { id, value } = e.target;
         setFormData(prev => ({ ...prev, [id]: value }));
@@ -125,6 +172,11 @@ import React, { useState, useEffect } from 'react';
       const handleAddressChange = (e) => {
         const { id, value } = e.target;
         setFormData(prev => ({ ...prev, endereco: { ...(prev.endereco || {}), [id]: value } }));
+      };
+
+      const handleObraAddressChange = (e) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, endereco_obra: { ...(prev.endereco_obra || {}), [id]: value } }));
       };
 
       const handleBankAccountChange = (index, e) => {
@@ -157,6 +209,24 @@ import React, { useState, useEffect } from 'react';
                 toast({ title: "Endereço preenchido!" });
             } else {
                 toast({ title: "CEP não encontrado", variant: "destructive" });
+            }
+        } catch (error) {
+            toast({ title: "Erro ao buscar CEP", variant: "destructive" });
+        }
+        setLoading(false);
+      };
+
+      const handleBuscaCepObra = async (cep) => {
+        if (!cep || cep.length < 8) return;
+        setLoading(true);
+        try {
+            const response = await fetch(`https://viacep.com.br/ws/${cep.replace(/\D/g, '')}/json/`);
+            const data = await response.json();
+            if (!data.erro) {
+                setFormData(prev => ({ ...prev, endereco_obra: { ...prev.endereco_obra, logradouro: data.logradouro, bairro: data.bairro, cidade: data.localidade, uf: data.uf }}));
+                toast({ title: "Endere�o da obra preenchido!" });
+            } else {
+                toast({ title: "CEP n�o encontrado", variant: "destructive" });
             }
         } catch (error) {
             toast({ title: "Erro ao buscar CEP", variant: "destructive" });
@@ -292,16 +362,36 @@ import React, { useState, useEffect } from 'react';
                 <div className="p-4 border rounded-lg space-y-4">
                   <h3 className="font-semibold text-lg">Endereço</h3>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="space-y-2 md:col-span-2"><Label>CEP</Label><div className="flex gap-1"><Input id="cep" value={formData.endereco?.cep || ''} onChange={handleAddressChange} /><Button type="button" size="icon" variant="outline" onClick={() => handleBuscaCep(formData.endereco?.cep)} disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : <Search />}</Button></div></div>
-                      <div className="space-y-2"><Label>Estado</Label><Input id="uf" value={formData.endereco?.uf || ''} onChange={handleAddressChange} /></div>
-                      <div className="space-y-2"><Label>Cidade</Label><Input id="cidade" value={formData.endereco?.cidade || ''} onChange={handleAddressChange} /></div>
-                      <div className="space-y-2 md:col-span-2"><Label>Endereço</Label><Input id="logradouro" value={formData.endereco?.logradouro || ''} onChange={handleAddressChange} /></div>
-                      <div className="space-y-2"><Label>Número</Label><Input id="numero" value={formData.endereco?.numero || ''} onChange={handleAddressChange} /></div>
-                      <div className="space-y-2"><Label>Bairro</Label><Input id="bairro" value={formData.endereco?.bairro || ''} onChange={handleAddressChange} /></div>
-                      <div className="space-y-2 md:col-span-4"><Label>Complemento</Label><Input id="complemento" value={formData.endereco?.complemento || ''} onChange={handleAddressChange} /></div>
+                      <div className="space-y-2 md:col-span-2"><Label>CEP</Label><div className="flex gap-1"><Input id="cep" value={safeEndereco.cep || ''} onChange={handleAddressChange} /><Button type="button" size="icon" variant="outline" onClick={() => handleBuscaCep(safeEndereco.cep)} disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : <Search />}</Button></div></div>
+                      <div className="space-y-2"><Label>Estado</Label><Input id="uf" value={safeEndereco.uf || ''} onChange={handleAddressChange} /></div>
+                      <div className="space-y-2"><Label>Cidade</Label><Input id="cidade" value={safeEndereco.cidade || ''} onChange={handleAddressChange} /></div>
+                      <div className="space-y-2 md:col-span-2"><Label>Endereço</Label><Input id="logradouro" value={safeEndereco.logradouro || ''} onChange={handleAddressChange} /></div>
+                      <div className="space-y-2"><Label>Número</Label><Input id="numero" value={safeEndereco.numero || ''} onChange={handleAddressChange} /></div>
+                      <div className="space-y-2"><Label>Bairro</Label><Input id="bairro" value={safeEndereco.bairro || ''} onChange={handleAddressChange} /></div>
+                      <div className="space-y-2 md:col-span-4"><Label>Complemento</Label><Input id="complemento" value={safeEndereco.complemento || ''} onChange={handleAddressChange} /></div>
                   </div>
                 </div>
 
+                <div className="p-4 border rounded-lg space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-lg">Endereco da Obra</h3>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Label htmlFor="obra_mesmo_endereco">E o mesmo do cliente?</Label>
+                      <Switch id="obra_mesmo_endereco" checked={formData.obra_mesmo_endereco} onCheckedChange={(c) => setFormData(prev => ({ ...prev, obra_mesmo_endereco: c }))} />
+                    </div>
+                  </div>
+                  {!formData.obra_mesmo_endereco && (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="space-y-2 md:col-span-2"><Label>CEP</Label><div className="flex gap-1"><Input id="cep" value={safeEnderecoObra.cep || ''} onChange={handleObraAddressChange} /><Button type="button" size="icon" variant="outline" onClick={() => handleBuscaCepObra(safeEnderecoObra.cep)} disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : <Search />}</Button></div></div>
+                        <div className="space-y-2"><Label>Estado</Label><Input id="uf" value={safeEnderecoObra.uf || ''} onChange={handleObraAddressChange} /></div>
+                        <div className="space-y-2"><Label>Cidade</Label><Input id="cidade" value={safeEnderecoObra.cidade || ''} onChange={handleObraAddressChange} /></div>
+                        <div className="space-y-2 md:col-span-2"><Label>Endereco</Label><Input id="logradouro" value={safeEnderecoObra.logradouro || ''} onChange={handleObraAddressChange} /></div>
+                        <div className="space-y-2"><Label>Numero</Label><Input id="numero" value={safeEnderecoObra.numero || ''} onChange={handleObraAddressChange} /></div>
+                        <div className="space-y-2"><Label>Bairro</Label><Input id="bairro" value={safeEnderecoObra.bairro || ''} onChange={handleObraAddressChange} /></div>
+                        <div className="space-y-2 md:col-span-4"><Label>Complemento</Label><Input id="complemento" value={safeEnderecoObra.complemento || ''} onChange={handleObraAddressChange} /></div>
+                    </div>
+                  )}
+                </div>
                 <div className="p-4 border rounded-lg space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-semibold text-lg flex items-center gap-2"><Banknote /> Dados Bancários</h3>

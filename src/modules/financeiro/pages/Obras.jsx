@@ -32,12 +32,8 @@ const Obras = () => {
 
   const fetchObras = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('obras')
-      .select(`
-        *,
-        transacoes ( valor )
-      `);
+    // Apenas busca obras; tabelas de transações não estão disponíveis neste schema
+    const { data, error } = await supabase.from('obras').select('*');
 
     if (error) {
       toast({
@@ -47,8 +43,8 @@ const Obras = () => {
       });
       setObras([]);
     } else {
-      const obrasComGastos = data.map(obra => {
-        const gasto = obra.transacoes.reduce((acc, t) => acc + (t.valor || 0), 0);
+      const obrasComGastos = (data || []).map((obra) => {
+        const gasto = 0;
         const percentual = obra.orcamento > 0 ? (gasto / obra.orcamento) * 100 : 0;
         return { ...obra, gasto, percentual };
       });
@@ -104,8 +100,8 @@ const Obras = () => {
   };
 
   const filteredObras = obras.filter(obra =>
-    obra.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (obra.cliente && obra.cliente.toLowerCase().includes(searchTerm.toLowerCase()))
+    (obra.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (obra.cliente || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status) => {
@@ -175,8 +171,8 @@ const Obras = () => {
                       <Building2 className="text-white" size={24} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900">{obra.nome}</h3>
-                      <p className="text-sm text-gray-600">{obra.cliente}</p>
+                      <h3 className="font-bold text-gray-900">{obra.nome || 'Sem nome'}</h3>
+                      <p className="text-sm text-gray-600">{obra.cliente || 'Cliente não informado'}</p>
                     </div>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(obra.status)}`}>
@@ -187,11 +183,11 @@ const Obras = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Orçamento:</span>
-                    <span className="font-medium text-gray-900">R$ {obra.orcamento.toLocaleString('pt-BR')}</span>
+                    <span className="font-medium text-gray-900">R$ {(obra.orcamento || 0).toLocaleString('pt-BR')}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Gasto:</span>
-                    <span className="font-medium text-gray-900">R$ {obra.gasto.toLocaleString('pt-BR')}</span>
+                    <span className="font-medium text-gray-900">R$ {(obra.gasto || 0).toLocaleString('pt-BR')}</span>
                   </div>
                   {obra.prazo && (
                     <div className="flex justify-between text-sm">
@@ -223,6 +219,11 @@ const Obras = () => {
                 </div>
               </motion.div>
             ))}
+            {!loading && filteredObras.length === 0 && (
+              <div className="col-span-full wg-card p-6 text-center text-gray-600">
+                Nenhuma obra cadastrada. Quando uma proposta for aprovada e gerar contrato, o card aparece aqui automaticamente para iniciar o fluxo financeiro.
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import OportunidadeCard from './OportunidadeCard';
@@ -11,6 +11,8 @@ import { ColumnHeader } from './ColumnHeader';
 import { AddColumnCard } from './AddColumnCard';
 import KanbanCardDialog from './KanbanCardDialog';
 
+const SERVICE_MODULES = ['arquitetura', 'engenharia', 'marcenaria'];
+
 const KanbanBoard = ({ modulo = 'oportunidades' }) => {
   const [columns, setColumns] = useState([]);
   const [cards, setCards] = useState([]);
@@ -21,8 +23,119 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
   const [cardToLinkClient, setCardToLinkClient] = useState(null); // Card esperando vinculação de cliente
+  const [isClearingModules, setIsClearingModules] = useState(false);
 
   const { toast } = useToast();
+  const columnsRef = useRef(columns);
+  const replicatedCardsRef = useRef(new Set());
+
+  useEffect(() => {
+    columnsRef.current = columns;
+  }, [columns]);
+
+  useEffect(() => {
+    replicatedCardsRef.current = new Set();
+  }, [modulo]);
+
+  const replicateToServiceBoards = useCallback(
+    async (card, destinationColumnId, currentColumns) => {
+      const columnsToUse = currentColumns ?? columnsRef.current;
+      if (!card || modulo !== 'oportunidades') return;
+      const closingColumnId = columnsToUse[columnsToUse.length - 1]?.id;
+      if (!closingColumnId || destinationColumnId !== closingColumnId) return;
+
+      const payload = card.payload || {};
+      const explicitServices = Array.isArray(card.servicos_contratados)
+        ? card.servicos_contratados.filter(Boolean)
+        : [];
+      const derivedServices = SERVICE_MODULES.filter((service) => {
+        const status = payload?.[service];
+        return status && status !== 'nao_previsto';
+      });
+      const services = [...new Set([...explicitServices, ...derivedServices])].filter((service) =>
+        SERVICE_MODULES.includes(service)
+      );
+      if (services.length === 0) return;
+
+      for (const service of services) {
+        const replicationKey = `${card.id}:${service}`;
+        if (replicatedCardsRef.current.has(replicationKey)) {
+          continue;
+        }
+
+        const { data: targetBoard, error: boardError } = await supabase
+          .from('kanban_boards')
+          .select('id')
+          .eq('modulo', service)
+          .maybeSingle();
+
+        if (boardError || !targetBoard?.id) {
+          console.warn(`[KanbanBoard] Board para serviço ${service} não encontrado ou erro:`, boardError?.message);
+          continue;
+        }
+
+        const { data: firstColumn, error: colError } = await supabase
+          .from('kanban_colunas')
+          .select('id')
+          .eq('board_id', targetBoard.id)
+          .order('pos', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (colError || !firstColumn?.id) {
+          console.warn(`[KanbanBoard] Primeira coluna não encontrada para board ${service}:`, colError?.message);
+          continue;
+        }
+
+        const { data: existingCard } = await supabase
+          .from('v_kanban_cards')
+          .select('id')
+          .eq('board_id', targetBoard.id)
+          .eq('payload->>origem_card_id', card.id)
+          .maybeSingle();
+
+        if (existingCard?.id) continue;
+
+        const payloadToPersist = {
+          ...payload,
+          origem_card_id: card.id,
+          modulo_origem: modulo,
+        };
+
+        const { error: insertError } = await supabase.rpc('api_criar_card_kanban', {
+          p_coluna_id: firstColumn.id,
+          p_titulo: card.titulo || card.nome || 'Oportunidade',
+          p_descricao: card.descricao || null,
+          p_entity_id: card.entity_id || null,
+          p_responsavel_id: card.responsavel_id || null,
+          p_servicos_contratados: [service],
+          p_payload: payloadToPersist,
+        });
+
+        if (insertError) {
+          console.warn(`[KanbanBoard] Erro ao replicar card ${card.id} para ${service}:`, insertError.message);
+        } else {
+          replicatedCardsRef.current.add(replicationKey);
+        }
+      }
+    },
+    [modulo]
+  );
+
+  const ensureClosingCardsReplicated = useCallback(
+    async (cardsList, currentColumns) => {
+      const columnsToUse = currentColumns ?? columnsRef.current;
+      if (modulo !== 'oportunidades' || columnsToUse.length === 0) return;
+      const closingColumnId = columnsToUse[columnsToUse.length - 1]?.id;
+      if (!closingColumnId) return;
+
+      const closingCards = cardsList.filter((card) => card.coluna_id === closingColumnId);
+      for (const card of closingCards) {
+        await replicateToServiceBoards(card, closingColumnId, columnsToUse);
+      }
+    },
+    [modulo, replicateToServiceBoards]
+  );
 
   const fetchBoardData = useCallback(async () => {
     setLoading(true);
@@ -61,9 +174,11 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
     if (cardsError) {
       toast({ title: 'Erro ao carregar cards', description: cardsError.message, variant: 'destructive' });
     }
-    setCards(kcards || []);
+    const safeCards = kcards || [];
+    setCards(safeCards);
     setLoading(false);
-  }, [modulo, toast]);
+    await ensureClosingCardsReplicated(safeCards, cols || []);
+  }, [modulo, toast, ensureClosingCardsReplicated]);
 
   useEffect(() => {
     fetchBoardData();
@@ -136,6 +251,57 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
     fetchBoardData();
   }
 
+  const handleClearServiceBoards = useCallback(async () => {
+    if (modulo !== 'oportunidades') return;
+    const confirmed = window.confirm('Remover todos os cards replicados dos módulos de Arquitetura, Engenharia e Marcenaria?');
+    if (!confirmed) return;
+
+    setIsClearingModules(true);
+    try {
+      const { data: serviceBoards, error: boardsError } = await supabase
+        .from('kanban_boards')
+        .select('id, modulo')
+        .in('modulo', SERVICE_MODULES);
+
+      if (boardsError) {
+        throw boardsError;
+      }
+
+      for (const board of serviceBoards || []) {
+        const { data: cardsToDelete, error: cardsError } = await supabase
+          .from('v_kanban_cards')
+          .select('id')
+          .eq('board_id', board.id);
+
+        if (cardsError) {
+          console.warn(`[KanbanBoard] Erro ao listar cards do módulo ${board.modulo}:`, cardsError.message);
+          continue;
+        }
+
+        for (const card of cardsToDelete || []) {
+          const { error: deleteError } = await supabase.rpc('api_deletar_card_kanban', {
+            p_card_id: card.id,
+          });
+
+          if (deleteError) {
+            console.warn(`[KanbanBoard] Erro ao excluir card ${card.id}:`, deleteError.message);
+          }
+        }
+      }
+
+      toast({ title: 'Cards removidos dos módulos de serviço.' });
+      fetchBoardData();
+    } catch (error) {
+      toast({
+        title: 'Erro ao remover cards',
+        description: error.message || String(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsClearingModules(false);
+    }
+  }, [fetchBoardData, modulo, toast]);
+
   const onDragEnd = async (result) => {
     const { destination, source, draggableId } = result;
     if (!destination) return;
@@ -143,16 +309,17 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
 
     const originalCards = [...cards];
     const cardToMove = originalCards.find(c => c.id === draggableId);
+    const destinationColumnId = destination.droppableId;
 
     const optimisticState = originalCards.filter(c => c.id !== draggableId);
-    optimisticState.splice(destination.index, 0, {...cardToMove, coluna_id: destination.droppableId});
+    optimisticState.splice(destination.index, 0, {...cardToMove, coluna_id: destinationColumnId});
 
     setCards(optimisticState.map((c, i) => ({...c, ordem: i})));
 
     // Usar função api_mover_card_kanban
     const { error } = await supabase.rpc('api_mover_card_kanban', {
       p_card_id: draggableId,
-      p_nova_coluna_id: destination.droppableId,
+      p_nova_coluna_id: destinationColumnId,
       p_nova_ordem: destination.index + 1
     });
 
@@ -160,6 +327,7 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
       toast({ title: "Erro ao mover card", description: error.message, variant: "destructive" });
       setCards(originalCards); // Reverte
     } else {
+      await replicateToServiceBoards(cardToMove, destinationColumnId);
       fetchBoardData(); // Refetch para pegar o estado correto do DB
     }
   };
@@ -170,7 +338,16 @@ const KanbanBoard = ({ modulo = 'oportunidades' }) => {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 space-x-2">
+        {modulo === 'oportunidades' && (
+          <Button
+            variant="outline"
+            onClick={handleClearServiceBoards}
+            disabled={isClearingModules}
+          >
+            {isClearingModules ? 'Removendo cards...' : 'Limpar módulos'}
+          </Button>
+        )}
         <Button onClick={() => {
           setSelectedCard(null);
           setIsCardDialogOpen(true);

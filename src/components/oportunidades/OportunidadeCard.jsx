@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { DollarSign, Phone, Edit, MapPin, Trash2, User } from 'lucide-react';
@@ -20,7 +19,7 @@ import NovaOportunidadeDialog from './NovaOportunidadeDialog';
 const OportunidadeCard = ({ card, onClick, onCardDeleted, onCardUpdated }) => {
     const { toast } = useToast();
     const [isEditing, setIsEditing] = useState(false);
-    const valor = parseFloat(card.valor_proposta || 0);
+    const valor = parseFloat(card.valor || card.valor_proposta || 0);
 
     const handleDeleteCard = async (e) => {
         e.stopPropagation();
@@ -67,7 +66,7 @@ const OportunidadeCard = ({ card, onClick, onCardDeleted, onCardUpdated }) => {
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        Esta ação irá excluir o card "{card.titulo}". Esta ação não pode ser desfeita.
+                                        Esta ação vai excluir o card "{card.titulo}". Não pode ser desfeita.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -79,13 +78,21 @@ const OportunidadeCard = ({ card, onClick, onCardDeleted, onCardUpdated }) => {
                     </div>
                 </div>
                 
-                <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2"><User size={14} />{card.cliente?.nome_razao_social || 'Cliente não definido'}</p>
+                <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                  <User size={14} />
+                  {card.cliente_nome || card.cliente?.nome_razao_social || 'Cliente não definido'}
+                </p>
 
                 <div className="space-y-2 text-sm">
                     <div className="flex items-center text-green-600 dark:text-green-400">
                         <DollarSign size={14} className="mr-2" />
                         <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)}</span>
                     </div>
+                    {card.servicos_contratados && card.servicos_contratados.length > 0 && (
+                        <div className="text-muted-foreground text-xs">
+                          {card.servicos_contratados.join(' / ')}
+                        </div>
+                    )}
                     {card.telefone && 
                         <div className="flex items-center text-muted-foreground">
                             <Phone size={14} className="mr-2" />

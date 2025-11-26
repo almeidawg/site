@@ -7,13 +7,59 @@ import React, { useState, useEffect, useRef } from 'react';
     import { Textarea } from '@/components/ui/textarea';
     import { useToast } from '@/components/ui/use-toast';
     import { Loader2, Save, Search, Upload } from 'lucide-react';
-    import { useLocalStorage } from '@/hooks/useLocalStorage';
-    import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/customSupabaseClient';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
     import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-    import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
+const formatDateForDb = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString().split('T')[0];
+};
 
-    const NovoContratoDialog = ({ open, onOpenChange, setContratos, propostaBase, onContratoGerado }) => {
+const ensureContractCode = () => `CTR-${Date.now().toString().slice(-6)}`;
+
+const syncContractFlows = async (contract) => {
+    if (!contract?.id || !contract.cliente_id) return;
+    const codigoObra = contract.numero || ensureContractCode();
+
+    try {
+        await supabase.from('obras').upsert({
+            codigo: codigoObra,
+            cliente_id: contract.cliente_id,
+            contrato_id: contract.id,
+            titulo: contract.titulo || contract.numero || 'Projeto de contrato',
+            descricao: contract.descricao || null,
+            status: 'planejamento',
+            valor_orcado: Number(contract.valor_total) || 0,
+            valor_realizado: 0,
+            data_inicio: formatDateForDb(contract.data_inicio) || formatDateForDb(contract.data_assinatura),
+        }, { onConflict: 'codigo' });
+    } catch (error) {
+        console.error('Erro ao sincronizar obra do contrato:', error);
+    }
+
+    try {
+        const projectPayload = {
+            name: contract.titulo || contract.numero || 'Projeto',
+            client_id: contract.cliente_id,
+            status: 'draft',
+            start_date: formatDateForDb(contract.data_inicio) || formatDateForDb(contract.data_assinatura),
+            dados: {
+                contrato_id: contract.id,
+                tipo: contract.tipo,
+            },
+        };
+
+        await supabase.from('projects').insert(projectPayload);
+    } catch (error) {
+        console.error('Erro ao criar projeto para contracto:', error);
+    }
+};
+
+const NovoContratoDialog = ({ open, onOpenChange, propostaBase, onContratoGerado, onContratoCreated }) => {
         const [targetId, setTargetId] = useState('');
         const [selectedCliente, setSelectedCliente] = useState(null);
         const [clientes, setClientes] = useState([]);
@@ -101,36 +147,55 @@ import React, { useState, useEffect, useRef } from 'react';
         };
 
         const handleSaveContrato = () => {
-            if (!targetId || !tipoContrato) {
-                toast({
-                    title: 'Campos obrigatórios',
-                    description: 'Selecione um cliente e o tipo de contrato.',
-                    variant: 'destructive',
-                });
-                return;
-            }
+        if (!targetId || !tipoContrato) {
+            toast({
+                title: 'Campos obrigatórios',
+                description: 'Selecione um cliente e o tipo de contrato.',
+                variant: 'destructive',
+            });
+            return;
+        }
 
-            setLoading(true);
+        setLoading(true);
 
-            const newContrato = {
-                id: `cont_${Date.now()}`,
-                targetId: targetId,
-                targetName: selectedCliente.nome_razao_social,
-                tipoContrato,
-                conteudo,
-                status: 'Rascunho',
-                propostaOrigemId: propostaBase ? propostaBase.id : null,
-                dataCriacao: new Date().toISOString(),
-            };
+        const numeroContrato = ensureContractCode();
+        const contratoPayload = {
+            numero: numeroContrato,
+            cliente_id: targetId,
+            titulo: selectedCliente?.nome_razao_social ? `Contrato ${selectedCliente.nome_razao_social}` : `Contrato ${numeroContrato}`,
+            descricao: conteudo || null,
+            valor_total: propostaBase?.valor_total ? Number(propostaBase.valor_total) : 0,
+            data_assinatura: formatDateForDb(new Date()),
+            status: 'ativo',
+            tipo: tipoContrato,
+            proposta_id: propostaBase?.id || null,
+            dados: { origem: 'crm' },
+        };
 
-            setContratos(prev => [...prev, newContrato]);
-            
+        try {
+            const { data: savedContract, error } = await supabase
+                .from('contratos')
+                .insert(contratoPayload)
+                .select(`
+                    *,
+                    cliente:entities(id, nome, nome_razao_social),
+                    proposta:propostas(id, numero)
+                `)
+                .single();
+
+            if (error) throw error;
+
+            await syncContractFlows(savedContract);
+
             if (onContratoGerado) {
-                onContratoGerado(newContrato);
+                onContratoGerado(savedContract);
             }
-            
-            if(propostaBase && propostaBase.oportunidade_id) {
-                 const updatedOportunidades = oportunidades.map(op => {
+            if (onContratoCreated) {
+                onContratoCreated(savedContract);
+            }
+
+            if (propostaBase && propostaBase.oportunidade_id) {
+                const updatedOportunidades = oportunidades.map((op) => {
                     if (op.id === propostaBase.oportunidade_id) {
                         const servicos = new Set(op.servicos_contratados || []);
                         servicos.add(tipoContrato);
@@ -143,11 +208,21 @@ import React, { useState, useEffect, useRef } from 'react';
 
             toast({
                 title: 'Contrato Salvo!',
-                description: 'O novo contrato foi salvo como rascunho.',
+                description: 'O contrato foi criado e sincronizado com os módulos financeiro e cronograma.',
             });
 
-            setLoading(false);
+            resetState();
             onOpenChange(false);
+        } catch (error) {
+            console.error('Erro ao salvar contrato:', error);
+            toast({
+                title: 'Erro ao salvar contrato',
+                description: error.message,
+                variant: 'destructive',
+            });
+        } finally {
+            setLoading(false);
+        }
         };
 
         return (

@@ -1,8 +1,8 @@
 // src/modules/financeiro/pages/FinanceiroLancamentosPage.jsx
 import { useEffect, useState } from "react";
 import {
-  listarLancamentosFinanceiros,
-  criarLancamentoFinanceiro
+  listarLancamentos,
+  criarLancamento
 } from "../services/financeiroService";
 
 export default function FinanceiroLancamentosPage() {
@@ -18,7 +18,7 @@ export default function FinanceiroLancamentosPage() {
   async function carregarLancamentos() {
     setLoading(true);
     try {
-      const data = await listarLancamentosFinanceiros({});
+      const data = await listarLancamentos({});
       setLancamentos(data);
     } catch (err) {
       console.error("Erro ao carregar lançamentos:", err);
@@ -45,17 +45,14 @@ export default function FinanceiroLancamentosPage() {
     }
 
     try {
-      await criarLancamentoFinanceiro({
-        tipo: form.tipo,
-        data_prevista: form.data_prevista,
-        valor: Number(form.valor),
-        descricao: form.descricao || null,
-        conta_id: 1, // ajuste depois para conta real
-        categoria_id: null,
-        obra_id: null,
-        contrato_id: null,
-        cliente_id: null,
-        status: "confirmado"
+      await criarLancamento({
+        type: form.tipo === "receita" ? "income" : "expense",
+        occurred_at: form.data_prevista,
+        amount: Number(form.valor),
+        description: form.descricao || null,
+        category_id: null,
+        project_id: null,
+        party_id: null
       });
 
       setForm((prev) => ({
@@ -72,12 +69,12 @@ export default function FinanceiroLancamentosPage() {
   }
 
   const totalReceitas = lancamentos
-    .filter((l) => l.tipo === "receita")
-    .reduce((sum, l) => sum + (l.valor || 0), 0);
+    .filter((l) => l.type === "income")
+    .reduce((sum, l) => sum + (l.amount || 0), 0);
 
   const totalDespesas = lancamentos
-    .filter((l) => l.tipo === "despesa")
-    .reduce((sum, l) => sum + (l.valor || 0), 0);
+    .filter((l) => l.type === "expense")
+    .reduce((sum, l) => sum + (l.amount || 0), 0);
 
   const saldo = totalReceitas - totalDespesas;
 
@@ -217,12 +214,12 @@ export default function FinanceiroLancamentosPage() {
             <tbody>
               {lancamentos.map((l) => (
                 <tr key={l.id}>
-                  <td style={td}>{l.data_prevista}</td>
-                  <td style={td}>{l.tipo}</td>
-                  <td style={td}>{l.descricao}</td>
+                  <td style={td}>{l.occurred_at}</td>
+                  <td style={td}>{l.type === "income" ? "receita" : "despesa"}</td>
+                  <td style={td}>{l.description}</td>
                   <td style={td}>
-                    {l.valor
-                      ? l.valor.toLocaleString("pt-BR", {
+                    {l.amount
+                      ? l.amount.toLocaleString("pt-BR", {
                           style: "currency",
                           currency: "BRL"
                         })

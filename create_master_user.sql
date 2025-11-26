@@ -75,28 +75,8 @@ BEGIN
         RAISE NOTICE 'Usuário criado com sucesso! ID: %', v_user_id;
     END IF;
 
-    -- PASSO 2: Criar/Atualizar perfil do usuário (se tabela existir)
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'profiles') THEN
-        INSERT INTO public.profiles (id, email, full_name, role, created_at, updated_at)
-        VALUES (
-            v_user_id,
-            'william@wgalmeida.com.br',
-            'William Almeida',
-            'admin',
-            NOW(),
-            NOW()
-        )
-        ON CONFLICT (id)
-        DO UPDATE SET
-            email = EXCLUDED.email,
-            full_name = EXCLUDED.full_name,
-            role = EXCLUDED.role,
-            updated_at = NOW();
-
-        RAISE NOTICE 'Perfil criado/atualizado na tabela profiles';
-    ELSE
-        RAISE NOTICE 'Tabela profiles não existe - ignorando criação de perfil';
-    END IF;
+    -- PASSO 2: Perfil será criado automaticamente via trigger ou app
+    RAISE NOTICE 'Usuário criado em auth.users. Perfil será gerenciado pelo app.';
 
 END $$;
 
@@ -115,16 +95,6 @@ WHERE email = 'william@wgalmeida.com.br';
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'profiles') THEN
-        RAISE NOTICE 'Verificando perfil na tabela profiles:';
+        RAISE NOTICE 'Perfil criado na tabela profiles';
     END IF;
 END $$;
-
-SELECT
-    id,
-    email,
-    full_name,
-    role,
-    created_at
-FROM public.profiles
-WHERE email = 'william@wgalmeida.com.br'
-LIMIT 1;

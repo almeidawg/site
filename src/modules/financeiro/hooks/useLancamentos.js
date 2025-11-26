@@ -5,7 +5,7 @@ export function useLancamentos() {
   const [lancamentos, setLancamentos] = useState([]);
 
   async function carregar() {
-    const { data } = await financeiroService.listarLancamentos();
+    const data = await financeiroService.listarLancamentos();
     setLancamentos(data || []);
   }
 

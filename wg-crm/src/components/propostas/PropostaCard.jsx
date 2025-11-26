@@ -83,26 +83,36 @@ const PropostaCard = ({ proposta, index, onApprove, onReject, onGerarContrato, o
             </Button>
         )}
 
-        {canApprove && proposta.status === 'aprovacao_pendente' && (
-            <>
-                <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700" onClick={() => onReject(proposta.id)}>
-                    <XCircle size={16} className="mr-2" />
-                    Rejeitar
-                </Button>
-                <Button variant="outline" size="sm" className="text-emerald-600 border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => onApprove(proposta.id)}>
-                    <CheckCircle size={16} className="mr-2" />
-                    Aprovar
-                </Button>
-            </>
+        {(['rascunho', 'enviada', 'em_negociacao', 'aprovacao_pendente'].includes(proposta.status)) && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-red-600 hover:text-red-700"
+              onClick={() => onReject(proposta.id)}
+              title="Rejeitar"
+            >
+              <XCircle size={16} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-emerald-600 hover:text-emerald-700"
+              onClick={() => onApprove(proposta.id)}
+              title="Aprovar"
+            >
+              <CheckCircle size={16} />
+            </Button>
+          </>
         )}
       </div>
 
-      {proposta.status === 'aprovada' && (
+      {['aprovada', 'contrato_gerado'].includes(proposta.status) && (
         <div className="mt-4 pt-4 border-t">
-            <Button className="w-full gradient-success text-white" onClick={() => onGerarContrato(proposta)}>
-                <FileSignature size={16} className="mr-2"/>
-                Gerar Contrato
-            </Button>
+          <Button className="w-full gradient-success text-white" onClick={() => onGerarContrato(proposta)}>
+            <FileSignature size={16} className="mr-2" />
+            {proposta.status === 'contrato_gerado' ? 'Contrato Gerado (reabrir)' : 'Gerar Contrato'}
+          </Button>
         </div>
       )}
     </motion.div>

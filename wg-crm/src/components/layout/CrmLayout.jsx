@@ -10,7 +10,6 @@ import Contratos from '@/components/pages/Contratos';
 import Obras from '@/components/pages/Obras';
 import Marcenaria from '@/components/pages/Marcenaria';
 import Compras from '@/components/pages/Compras';
-import Financeiro from '@/components/pages/Financeiro';
 import IntegrationsPage from '@/pages/IntegrationsPage';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import Arquitetura from '@/components/pages/Arquitetura';
@@ -22,6 +21,41 @@ import Usuarios from '@/components/pages/Usuarios';
 import Configuracoes from '@/components/pages/Configuracoes';
 import PlaceholderPage from '@/components/pages/PlaceholderPage';
 import Pessoas from '@/components/pages/Pessoas';
+import FinanceiroModule from '@/modules/financeiro/FinanceiroModule';
+import CronogramaModule from '@/modules/cronograma/CronogramaModule';
+import { X } from 'lucide-react';
+
+const TAB_CONFIG = {
+  dashboard: { label: 'Dashboard', basePath: '/dashboard' },
+  oportunidades: { label: 'Oportunidades', basePath: '/oportunidades' },
+  propostas: { label: 'Propostas', basePath: '/propostas' },
+  contratos: { label: 'Contratos', basePath: '/contratos' },
+  arquitetura: { label: 'Arquitetura', basePath: '/arquitetura' },
+  engenharia: { label: 'Engenharia', basePath: '/engenharia' },
+  marcenaria: { label: 'Marcenaria', basePath: '/marcenaria' },
+  compras: { label: 'Compras', basePath: '/compras' },
+  assistencia: { label: 'Assistência', basePath: '/assistencia' },
+  pessoas: { label: 'Pessoas', basePath: '/pessoas' },
+  usuarios: { label: 'Usuários', basePath: '/usuarios' },
+  configuracoes: { label: 'Configurações', basePath: '/configuracoes' },
+  financeiro: { label: 'Financeiro', basePath: '/financeiro' },
+  cronograma: { label: 'Cronograma', basePath: '/cronograma' },
+};
+
+const DEFAULT_TAB_KEY = 'dashboard';
+
+const buildTab = (key, pathname) => {
+  const config = TAB_CONFIG[key] || {
+    label: key.charAt(0).toUpperCase() + key.slice(1),
+    basePath: `/${key}`,
+  };
+  return {
+    key,
+    label: config.label,
+    basePath: config.basePath,
+    lastPath: pathname || config.basePath,
+  };
+};
 
 const CrmLayout = () => {
   const location = useLocation();
@@ -35,10 +69,45 @@ const CrmLayout = () => {
   };
   
   const [currentPage, setCurrentPage] = useState(getCurrentPage());
+  const [openTabs, setOpenTabs] = useState(() => [buildTab(getCurrentPage(), location.pathname || '/dashboard')]);
 
   useEffect(() => {
-    setCurrentPage(getCurrentPage());
+    const pageKey = getCurrentPage();
+    setCurrentPage(pageKey);
+    setOpenTabs((prevTabs) => {
+      const exists = prevTabs.find((tab) => tab.key === pageKey);
+      if (exists) {
+        return prevTabs.map((tab) =>
+          tab.key === pageKey ? { ...tab, lastPath: location.pathname } : tab
+        );
+      }
+      return [...prevTabs, buildTab(pageKey, location.pathname)];
+    });
   }, [location.pathname]);
+
+  const handleTabClick = (tab) => {
+    if (tab.lastPath) {
+      navigate(tab.lastPath);
+    } else if (tab.basePath) {
+      navigate(tab.basePath);
+    }
+  };
+
+  const handleCloseTab = (tabKey) => {
+    setOpenTabs((prevTabs) => {
+      let nextTabs = prevTabs.filter((tab) => tab.key !== tabKey);
+      if (nextTabs.length === 0) {
+        nextTabs = [buildTab(DEFAULT_TAB_KEY, '/dashboard')];
+      }
+
+      if (tabKey === getCurrentPage()) {
+        const nextTab = nextTabs[nextTabs.length - 1];
+        setTimeout(() => handleTabClick(nextTab), 0);
+      }
+
+      return nextTabs;
+    });
+  };
 
 
   return (
@@ -56,8 +125,38 @@ const CrmLayout = () => {
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           isStore={false}
         />
-        
-        <main className="p-6">
+        <div className="px-6 pt-4">
+          <div className="flex items-center space-x-2 overflow-x-auto pb-4">
+            {openTabs.map((tab) => {
+              const isActive = tab.key === currentPage;
+              return (
+                <div
+                  key={tab.key}
+                  className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm cursor-pointer transition-colors ${
+                    isActive
+                      ? 'bg-white border-wg-orange-base text-wg-orange-base shadow-sm'
+                      : 'bg-white/60 border-transparent text-gray-600 hover:border-gray-300'
+                  }`}
+                  onClick={() => handleTabClick(tab)}
+                >
+                  <span>{tab.label}</span>
+                  {tab.key !== DEFAULT_TAB_KEY && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCloseTab(tab.key);
+                      }}
+                      className="p-1 rounded-full hover:bg-gray-100"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <main className="p-6 pt-0">
           <Routes>
             <Route path="/" element={<Dashboard navigate={navigate} />} />
             <Route path="/dashboard" element={<Dashboard navigate={navigate} />} />
@@ -68,7 +167,8 @@ const CrmLayout = () => {
             <Route path="/marcenaria" element={<Marcenaria />} />
             <Route path="/compras" element={<Compras />} />
             <Route path="/pessoas" element={<Pessoas />} />
-            <Route path="/financeiro" element={<Financeiro />} />
+            <Route path="/financeiro/*" element={<FinanceiroModule />} />
+            <Route path="/cronograma/*" element={<CronogramaModule />} />
             <Route path="/arquitetura" element={<Arquitetura />} />
             <Route path="/assistencia" element={<Assistencia />} />
             <Route path="/onboarding" element={<Onboarding />} />

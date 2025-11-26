@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DollarSign, Phone, Home, Edit, MapPin, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
@@ -20,6 +20,15 @@ const OportunidadeCard = ({ card, onCardClick, onEditClient, onCreateClient, onC
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(card.titulo);
   const valor = parseFloat(card.valor || 0);
+  const moduleValues = card?.payload?.module_values || {};
+  const moduleTotal = useMemo(
+    () =>
+      Object.values(moduleValues)
+        .map((value) => parseFloat(value) || 0)
+        .reduce((sum, val) => sum + val, 0),
+    [moduleValues]
+  );
+  const unidadeCliente = card?.payload?.unidade_cliente || card?.payload?.unidade || card?.unidade_cliente;
 
   const handleTitleSave = async () => {
     const newTitle = title.trim();
@@ -140,7 +149,9 @@ const OportunidadeCard = ({ card, onCardClick, onEditClient, onCreateClient, onC
         <div className="flex items-center text-green-600 dark:text-green-400">
           <DollarSign size={14} className="mr-2" />
           <span>
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)}
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+              moduleTotal > 0 ? moduleTotal : valor
+            )}
           </span>
         </div>
         <div className="flex items-center text-gray-500 dark:text-gray-400">
@@ -150,6 +161,10 @@ const OportunidadeCard = ({ card, onCardClick, onEditClient, onCreateClient, onC
         <div className="flex items-center text-gray-500 dark:text-gray-400">
           <MapPin size={14} className="mr-2" />
           <span className="truncate">{card.endereco_obra || '-'}</span>
+        </div>
+        <div className="flex items-center text-gray-500 dark:text-gray-400">
+          <MapPin size={14} className="mr-2" />
+          <span className="truncate">{unidadeCliente || '-'}</span>
         </div>
         <div className="flex items-center text-gray-500 dark:text-gray-400">
           <Home size={14} className="mr-2" />

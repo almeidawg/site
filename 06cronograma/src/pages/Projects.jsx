@@ -90,7 +90,7 @@ const ProjectForm = ({ onFinished }) => {
         <Popover open={openClientSelector} onOpenChange={setOpenClientSelector}>
           <PopoverTrigger asChild>
             <Button variant="outline" role="combobox" aria-expanded={openClientSelector} className="w-full justify-between">
-              {selectedClient ? selectedClient.nome_razao_social : "Selecione um cliente..."}
+              {selectedClient ? selectedClient.nome : "Selecione um cliente..."}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -103,7 +103,7 @@ const ProjectForm = ({ onFinished }) => {
                 {entities.map((entity) => (
                   <CommandItem key={entity.id} value={entity.id} onSelect={() => handleClientSelect(entity.id)}>
                     <Check className={cn("mr-2 h-4 w-4", selectedClientId === entity.id ? "opacity-100" : "opacity-0")} />
-                    {entity.nome_razao_social}
+                    {entity.nome}
                   </CommandItem>
                 ))}
               </CommandGroup>

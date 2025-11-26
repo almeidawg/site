@@ -3,12 +3,13 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import { supabase } from "../../../config/supabaseClient";
+import { resolveLoginEmailFromCpf } from "@/lib/cpf";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ cpf: "", password: "" });
   const [loading, setLoading] = useState(false);
 
   // Se não tiver "from", vai para a raiz "/", onde está o Dashboard
@@ -23,11 +24,17 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(form.email, form.password);
+      const email = resolveLoginEmailFromCpf(form.cpf);
+      if (!email) {
+        alert("Informe um CPF válido com 11 dígitos.");
+        setLoading(false);
+        return;
+      }
+      await login(email, form.password);
       navigate(from, { replace: true });
     } catch (err) {
       console.error("Erro no login:", err);
-      alert("Login inválido. Verifique e-mail e senha.");
+      alert("Login inválido. Verifique CPF e senha.");
     } finally {
       setLoading(false);
     }
@@ -76,19 +83,20 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
-          <div>
-            <label style={label}>E-mail corporativo</label>
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              style={input}
-              required
-            />
-          </div>
-          <div>
-            <label style={label}>Senha</label>
+        <div>
+          <label style={label}>CPF (sem pontos ou traços)</label>
+          <input
+            name="cpf"
+            type="text"
+            value={form.cpf}
+            onChange={handleChange}
+            style={input}
+            placeholder="00000000000"
+            required
+          />
+        </div>
+        <div>
+          <label style={label}>Senha</label>
             <input
               name="password"
               type="password"

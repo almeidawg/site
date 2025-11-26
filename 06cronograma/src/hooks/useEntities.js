@@ -12,7 +12,7 @@ export const useEntities = () => {
                 .from('entities')
                 .select('*')
                 .eq('tipo', 'cliente')
-                .order('nome_razao_social', { ascending: true });
+                .order('nome', { ascending: true });
 
             if (error) throw error;
             
@@ -36,7 +36,7 @@ export const useEntities = () => {
         try {
             const { data, error } = await supabase
                 .from('entities')
-                .select('id, nome_razao_social, endereco')
+                .select('id, nome, endereco')
                 .eq('id', id)
                 .single();
 

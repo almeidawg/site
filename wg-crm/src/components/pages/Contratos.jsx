@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import {
 
 const Contratos = () => {
   const [contratos, setContratos] = useLocalStorage('crm_contratos', []);
+  const [propostas] = useLocalStorage('crm_propostas', []);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [contratoParaPdf, setContratoParaPdf] = useState(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -39,18 +40,27 @@ const Contratos = () => {
   const pdfRef = useRef();
   const { toast } = useToast();
 
+  const propostasAprovadas = useMemo(
+    () => propostas.filter((p) => ['aprovada', 'contrato_gerado'].includes(p.status)),
+    [propostas]
+  );
+
   const handleVisualizarContrato = (contrato) => {
     setContratoParaVisualizar(contrato);
     setVisualizarDialogOpen(true);
   };
 
-  const handleNotImplemented = () => {
-    toast({
-      title: "🚧 Em breve!",
-      description: "Esta funcionalidade será implementada em breve. Fique de olho!",
-      variant: "destructive"
-    });
-  }
+  const handleOpenDialog = () => {
+    if (propostasAprovadas.length === 0) {
+      toast({
+        title: 'Nenhuma proposta aprovada',
+        description: 'Aprove uma proposta antes de gerar o contrato.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setDialogOpen(true);
+  };
 
   const confirmDelete = (contrato) => {
     setContratoToDelete(contrato);
@@ -85,7 +95,10 @@ const Contratos = () => {
           const height = pdfWidth / ratio;
 
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, height > pdfHeight ? pdfHeight : height);
-          pdf.save(`contrato-${contrato.targetName.replace(/\s/g, '_')}.pdf`);
+          const nomeArquivo = contrato.targetName
+            ? `contrato-${contrato.targetName.replace(/\s/g, '_')}.pdf`
+            : 'contrato.pdf';
+          pdf.save(nomeArquivo);
           
           toast({
             title: "PDF Gerado!",
@@ -161,7 +174,7 @@ const Contratos = () => {
             </p>
           </div>
           <Button
-            onClick={() => setDialogOpen(true)}
+            onClick={handleOpenDialog}
             className="gradient-primary text-white shadow-lg shadow-orange-500/30"
           >
             <Plus size={20} className="mr-2" />
@@ -184,6 +197,15 @@ const Contratos = () => {
             <div className="space-y-3">
               {contratos.map((contrato, index) => {
                 const { icon, tagClass } = getContratoStyle(contrato.tipoContrato);
+                const dataCriacao = contrato.dataCriacao
+                  ? new Date(contrato.dataCriacao).toLocaleDateString()
+                  : '';
+                const dataPrevisao =
+                  contrato.dataInicioPrevista && contrato.dataTerminoPrevista
+                    ? `${new Date(contrato.dataInicioPrevista).toLocaleDateString()} - ${new Date(
+                        contrato.dataTerminoPrevista
+                      ).toLocaleDateString()}`
+                    : null;
                 return (
                   <motion.div
                     key={contrato.id}
@@ -195,10 +217,17 @@ const Contratos = () => {
                     <div className="flex items-center gap-4">
                       {icon}
                       <div>
-                        <p className="font-semibold">{getTipoContratoLabel(contrato.tipoContrato)} - {contrato.targetName}</p>
-                        <p className="text-sm text-wg-gray-medium">
-                          Para: <span className="font-medium capitalize">{contrato.targetType}</span> | Gerado em: {new Date(contrato.dataCriacao).toLocaleDateString()}
+                        <p className="font-semibold">
+                          {getTipoContratoLabel(contrato.tipoContrato)} - {contrato.targetName || 'Cliente'}
                         </p>
+                        <p className="text-sm text-wg-gray-medium">
+                          Proposta: {contrato.propostaNumero ? `#${contrato.propostaNumero}` : 'N/A'} | Gerado em: {dataCriacao || 'N/A'}
+                        </p>
+                        {dataPrevisao && (
+                          <p className="text-xs text-muted-foreground">
+                            Prazo previsto: {dataPrevisao} ({contrato.diasUteis} dia(s) útil/eis)
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

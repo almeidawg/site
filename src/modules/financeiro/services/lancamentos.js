@@ -14,7 +14,7 @@ export async function listLancamentos() {
       party:party_id ( name ),
       category:category_id ( name ),
       account:account_id ( name ),
-      project:project_id ( nome_razao_social )
+      project:project_id ( id )
     `)
     .is('deleted_at', null)
     .order('occurred_at', { ascending: false, nullsFirst: false })
@@ -27,7 +27,7 @@ export async function listLancamentos() {
     party_name: item.party?.name,
     category_name: item.category?.name,
     account_name: item.account?.name,
-    project_name: item.project?.nome_razao_social,
+    project_name: item.project?.id,
   }));
 }
 

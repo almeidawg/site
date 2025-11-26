@@ -1,7 +1,7 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, LayoutGrid, List, Trash2 } from 'lucide-react';
+import { Plus, LayoutGrid, List, Trash2, Users, ImagePlus, ArrowUpFromLine, FileSignature, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import PropostaCard from '@/components/propostas/PropostaCard';
@@ -23,10 +23,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const Propostas = () => {
   const [propostas, setPropostas] = useLocalStorage('crm_propostas', []);
   const [contratos, setContratos] = useLocalStorage('crm_contratos', []);
+  const [clientAvatars, setClientAvatars] = useLocalStorage('crm_client_avatars', {});
   const [novaPropostaDialogOpen, setNovaPropostaDialogOpen] = useState(false);
   const [novoContratoDialogOpen, setNovoContratoDialogOpen] = useState(false);
   const [propostaParaContrato, setPropostaParaContrato] = useState(null);
@@ -36,8 +44,64 @@ const Propostas = () => {
   const [propostaParaPdf, setPropostaParaPdf] = useState(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
+  const [clienteDialogOpen, setClienteDialogOpen] = useState(false);
+  const [clienteSelecionado, setClienteSelecionado] = useState(null);
+  const [clientePropostasAprovadas, setClientePropostasAprovadas] = useState([]);
   const pdfRef = useRef();
   const { toast } = useToast();
+
+  const clientesAgrupados = useMemo(() => {
+    const map = new Map();
+    propostas.forEach((p) => {
+      if (!p.cliente_id) return;
+      const entry = map.get(p.cliente_id) || {
+        clienteId: p.cliente_id,
+        clienteNome: p.cliente_nome || 'Cliente',
+        propostas: [],
+        aprovadas: [],
+        valorAprovadas: 0,
+        avatarUrl: clientAvatars[p.cliente_id] || null,
+      };
+
+      entry.propostas.push(p);
+      if (p.status === 'aprovada' || p.status === 'contrato_gerado') {
+        entry.aprovadas.push(p);
+        entry.valorAprovadas += parseFloat(p.valor_total) || 0;
+      }
+      map.set(p.cliente_id, entry);
+    });
+
+    return Array.from(map.values()).sort((a, b) => a.clienteNome.localeCompare(b.clienteNome));
+  }, [propostas, clientAvatars]);
+
+  const getInitials = (nome = '') => {
+    const parts = nome.split(' ').filter(Boolean);
+    if (parts.length === 0) return 'CL';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const handleAvatarUpload = (clienteId, file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setClientAvatars((prev) => ({ ...prev, [clienteId]: reader.result }));
+      toast({ title: 'Avatar atualizado!', description: 'A imagem do cliente foi personalizada.' });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUseSuggestedAvatar = (clienteId, clienteNome) => {
+    const suggestedUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(clienteNome || clienteId)}`;
+    setClientAvatars((prev) => ({ ...prev, [clienteId]: suggestedUrl }));
+    toast({ title: 'Avatar sugerido aplicado', description: 'Você pode trocar a qualquer momento.' });
+  };
+
+  const abrirDialogCliente = (cliente) => {
+    setClienteSelecionado(cliente);
+    setClientePropostasAprovadas(cliente.aprovadas);
+    setClienteDialogOpen(true);
+  };
 
   const handleUpdateStatus = (id, newStatus, toastTitle, toastDescription) => {
     setPropostas(prevPropostas => 
@@ -171,6 +235,9 @@ const Propostas = () => {
               <ToggleGroupItem value="list" aria-label="Ver em lista">
                 <List className="h-4 w-4" />
               </ToggleGroupItem>
+              <ToggleGroupItem value="clientes" aria-label="Ver por cliente">
+                <Users className="h-4 w-4" />
+              </ToggleGroupItem>
             </ToggleGroup>
             <Button
               onClick={handleOpenNewProposta}
@@ -190,6 +257,92 @@ const Propostas = () => {
           >
             <p className="text-muted-foreground">Nenhuma proposta criada ainda</p>
           </motion.div>
+        ) : viewMode === 'clientes' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {clientesAgrupados.map((cliente) => (
+              <motion.div
+                key={cliente.clienteId}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl border p-5 shadow-sm flex flex-col gap-3"
+              >
+                <div className="flex items-center gap-3">
+                  {cliente.avatarUrl ? (
+                    <img
+                      src={cliente.avatarUrl}
+                      alt={cliente.clienteNome}
+                      className="w-12 h-12 rounded-full object-cover border"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-orange-400 text-white flex items-center justify-center font-semibold">
+                      {getInitials(cliente.clienteNome)}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-lg">{cliente.clienteNome}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {cliente.propostas.length} proposta(s) · {cliente.aprovadas.length} aprovada(s)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => abrirDialogCliente(cliente)}
+                    disabled={cliente.aprovadas.length === 0}
+                  >
+                    <FileSignature className="h-4 w-4 mr-2" />
+                    Ver aprovadas
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleUseSuggestedAvatar(cliente.clienteId, cliente.clienteNome)}
+                    title="Aplicar avatar sugerido"
+                  >
+                    <ImagePlus className="h-4 w-4" />
+                  </Button>
+                  <input
+                    id={`avatar-${cliente.clienteId}`}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleAvatarUpload(cliente.clienteId, e.target.files?.[0])}
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => document.getElementById(`avatar-${cliente.clienteId}`)?.click()}
+                    title="Enviar avatar do cliente"
+                  >
+                    <ArrowUpFromLine className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="rounded-xl bg-gray-50 border p-3 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Valor aprovado</span>
+                    <span className="font-semibold">
+                      {cliente.valorAprovadas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {cliente.aprovadas.slice(0, 3).map((p) => (
+                      <span key={p.id} className="px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-medium">
+                        #{p.numero}
+                      </span>
+                    ))}
+                    {cliente.aprovadas.length > 3 && (
+                      <span className="text-muted-foreground">+{cliente.aprovadas.length - 3} outras</span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         ) : (
           viewMode === 'grid' ? (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -230,6 +383,43 @@ const Propostas = () => {
           onContratoGerado={onContratoGerado}
         />
       </div>
+
+      <Dialog open={clienteDialogOpen} onOpenChange={setClienteDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Propostas aprovadas - {clienteSelecionado?.clienteNome}</DialogTitle>
+            <DialogDescription>
+              O mesmo cliente pode ter várias propostas aprovadas. Escolha qual seguir para contrato ou PDF.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {clientePropostasAprovadas.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Nenhuma proposta aprovada para este cliente.</p>
+            ) : (
+              clientePropostasAprovadas.map((p) => (
+                <div key={p.id} className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="font-semibold">Proposta #{p.numero}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {p.valor_total?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · {new Date(p.data_criacao).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleGeneratePdf(p)}>
+                      <Download className="h-4 w-4 mr-2" />
+                      PDF
+                    </Button>
+                    <Button size="sm" className="gradient-primary text-white" onClick={() => handleGerarContrato(p)}>
+                      <FileSignature className="h-4 w-4 mr-2" />
+                      Gerar contrato
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       
       {propostaParaPdf && (
         <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>

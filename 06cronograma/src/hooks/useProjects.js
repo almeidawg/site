@@ -11,12 +11,7 @@ export const useProjects = () => {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select(`
-          *,
-          items:project_items(*, catalog_item:catalog_items(*)),
-          tasks:tasks(*, comments:task_comments(*)),
-          team:project_team(*, member:team_members(*))
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -47,8 +42,8 @@ export const useProjects = () => {
 
   const addProject = async (projectData) => {
     console.log("Attempting to add project:", projectData);
-    if (!projectData.name || !projectData.client_id || !projectData.start_date) {
-      const errorMessage = "Validation failed: Name, client_id, and start_date are required.";
+    if (!projectData.name || !projectData.client_id) {
+      const errorMessage = "Validation failed: Name and client_id are required.";
       console.error(errorMessage);
       throw new Error(errorMessage);
     }
@@ -58,8 +53,8 @@ export const useProjects = () => {
         .from('projects')
         .insert({
           name: projectData.name,
-          address: projectData.address,
-          start_date: projectData.start_date,
+          // address column não existe neste schema
+          start_date: projectData.start_date || null,
           client_id: projectData.client_id,
           status: 'draft',
         })

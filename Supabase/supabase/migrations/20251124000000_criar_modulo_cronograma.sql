@@ -47,14 +47,15 @@ CREATE TABLE IF NOT EXISTS public.projects (
 );
 
 -- Índices
-CREATE INDEX idx_projects_empresa_id ON projects(empresa_id);
-CREATE INDEX idx_projects_obra_id ON projects(obra_id);
-CREATE INDEX idx_projects_status ON projects(status);
-CREATE INDEX idx_projects_responsavel ON projects(responsavel_id);
+CREATE INDEX IF NOT EXISTS idx_projects_empresa_id ON projects(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_projects_obra_id ON projects(obra_id);
+CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+CREATE INDEX IF NOT EXISTS idx_projects_responsavel ON projects(responsavel_id);
 
 -- RLS
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem projetos da própria empresa" ON projects;
 CREATE POLICY "Usuários veem projetos da própria empresa"
   ON projects FOR SELECT
   USING (
@@ -63,6 +64,7 @@ CREATE POLICY "Usuários veem projetos da própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários criam projetos na própria empresa" ON projects;
 CREATE POLICY "Usuários criam projetos na própria empresa"
   ON projects FOR INSERT
   WITH CHECK (
@@ -71,6 +73,7 @@ CREATE POLICY "Usuários criam projetos na própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários editam projetos da própria empresa" ON projects;
 CREATE POLICY "Usuários editam projetos da própria empresa"
   ON projects FOR UPDATE
   USING (
@@ -104,11 +107,12 @@ CREATE TABLE IF NOT EXISTS public.teams (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_teams_empresa_id ON teams(empresa_id);
-CREATE INDEX idx_teams_lider ON teams(lider_id);
+CREATE INDEX IF NOT EXISTS idx_teams_empresa_id ON teams(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_teams_lider ON teams(lider_id);
 
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem equipes da própria empresa" ON teams;
 CREATE POLICY "Usuários veem equipes da própria empresa"
   ON teams FOR SELECT
   USING (
@@ -117,6 +121,7 @@ CREATE POLICY "Usuários veem equipes da própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários criam equipes na própria empresa" ON teams;
 CREATE POLICY "Usuários criam equipes na própria empresa"
   ON teams FOR INSERT
   WITH CHECK (
@@ -125,6 +130,7 @@ CREATE POLICY "Usuários criam equipes na própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários editam equipes da própria empresa" ON teams;
 CREATE POLICY "Usuários editam equipes da própria empresa"
   ON teams FOR UPDATE
   USING (
@@ -191,16 +197,17 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   created_by UUID REFERENCES profiles(id)
 );
 
-CREATE INDEX idx_tasks_empresa_id ON tasks(empresa_id);
-CREATE INDEX idx_tasks_project_id ON tasks(project_id);
-CREATE INDEX idx_tasks_parent ON tasks(parent_task_id);
-CREATE INDEX idx_tasks_status ON tasks(status);
-CREATE INDEX idx_tasks_responsavel ON tasks(responsavel_id);
-CREATE INDEX idx_tasks_equipe ON tasks(equipe_id);
-CREATE INDEX idx_tasks_datas ON tasks(data_inicio_prevista, data_fim_prevista);
+CREATE INDEX IF NOT EXISTS idx_tasks_empresa_id ON tasks(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_parent ON tasks(parent_task_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_responsavel ON tasks(responsavel_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_equipe ON tasks(equipe_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_datas ON tasks(data_inicio_prevista, data_fim_prevista);
 
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem tarefas da própria empresa" ON tasks;
 CREATE POLICY "Usuários veem tarefas da própria empresa"
   ON tasks FOR SELECT
   USING (
@@ -209,6 +216,7 @@ CREATE POLICY "Usuários veem tarefas da própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários criam tarefas na própria empresa" ON tasks;
 CREATE POLICY "Usuários criam tarefas na própria empresa"
   ON tasks FOR INSERT
   WITH CHECK (
@@ -217,6 +225,7 @@ CREATE POLICY "Usuários criam tarefas na própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários editam tarefas da própria empresa" ON tasks;
 CREATE POLICY "Usuários editam tarefas da própria empresa"
   ON tasks FOR UPDATE
   USING (
@@ -255,11 +264,12 @@ CREATE TABLE IF NOT EXISTS public.task_dependencies (
   UNIQUE(predecessor_id, successor_id)
 );
 
-CREATE INDEX idx_task_dependencies_predecessor ON task_dependencies(predecessor_id);
-CREATE INDEX idx_task_dependencies_successor ON task_dependencies(successor_id);
+CREATE INDEX IF NOT EXISTS idx_task_dependencies_predecessor ON task_dependencies(predecessor_id);
+CREATE INDEX IF NOT EXISTS idx_task_dependencies_successor ON task_dependencies(successor_id);
 
 ALTER TABLE task_dependencies ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem dependências de tarefas da própria empresa" ON task_dependencies;
 CREATE POLICY "Usuários veem dependências de tarefas da própria empresa"
   ON task_dependencies FOR SELECT
   USING (
@@ -272,6 +282,7 @@ CREATE POLICY "Usuários veem dependências de tarefas da própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários criam dependências de tarefas da própria empresa" ON task_dependencies;
 CREATE POLICY "Usuários criam dependências de tarefas da própria empresa"
   ON task_dependencies FOR INSERT
   WITH CHECK (
@@ -310,11 +321,12 @@ CREATE TABLE IF NOT EXISTS public.team_members (
   UNIQUE(team_id, user_id)
 );
 
-CREATE INDEX idx_team_members_team ON team_members(team_id);
-CREATE INDEX idx_team_members_user ON team_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_team ON team_members(team_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members(user_id);
 
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem membros de equipes da própria empresa" ON team_members;
 CREATE POLICY "Usuários veem membros de equipes da própria empresa"
   ON team_members FOR SELECT
   USING (
@@ -327,6 +339,7 @@ CREATE POLICY "Usuários veem membros de equipes da própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários criam membros de equipes da própria empresa" ON team_members;
 CREATE POLICY "Usuários criam membros de equipes da própria empresa"
   ON team_members FOR INSERT
   WITH CHECK (
@@ -379,13 +392,14 @@ CREATE TABLE IF NOT EXISTS public.project_contracts (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_project_contracts_empresa ON project_contracts(empresa_id);
-CREATE INDEX idx_project_contracts_project ON project_contracts(project_id);
-CREATE INDEX idx_project_contracts_cliente ON project_contracts(cliente_id);
-CREATE INDEX idx_project_contracts_status ON project_contracts(status);
+CREATE INDEX IF NOT EXISTS idx_project_contracts_empresa ON project_contracts(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_project_contracts_project ON project_contracts(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_contracts_cliente ON project_contracts(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_project_contracts_status ON project_contracts(status);
 
 ALTER TABLE project_contracts ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem contratos da própria empresa" ON project_contracts;
 CREATE POLICY "Usuários veem contratos da própria empresa"
   ON project_contracts FOR SELECT
   USING (
@@ -394,6 +408,7 @@ CREATE POLICY "Usuários veem contratos da própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários criam contratos na própria empresa" ON project_contracts;
 CREATE POLICY "Usuários criam contratos na própria empresa"
   ON project_contracts FOR INSERT
   WITH CHECK (
@@ -402,6 +417,7 @@ CREATE POLICY "Usuários criam contratos na própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários editam contratos da própria empresa" ON project_contracts;
 CREATE POLICY "Usuários editam contratos da própria empresa"
   ON project_contracts FOR UPDATE
   USING (
@@ -456,12 +472,13 @@ CREATE TABLE IF NOT EXISTS public.project_measurements (
   created_by UUID REFERENCES profiles(id)
 );
 
-CREATE INDEX idx_project_measurements_empresa ON project_measurements(empresa_id);
-CREATE INDEX idx_project_measurements_contract ON project_measurements(contract_id);
-CREATE INDEX idx_project_measurements_status ON project_measurements(status);
+CREATE INDEX IF NOT EXISTS idx_project_measurements_empresa ON project_measurements(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_project_measurements_contract ON project_measurements(contract_id);
+CREATE INDEX IF NOT EXISTS idx_project_measurements_status ON project_measurements(status);
 
 ALTER TABLE project_measurements ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem medições da própria empresa" ON project_measurements;
 CREATE POLICY "Usuários veem medições da própria empresa"
   ON project_measurements FOR SELECT
   USING (
@@ -470,6 +487,7 @@ CREATE POLICY "Usuários veem medições da própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários criam medições na própria empresa" ON project_measurements;
 CREATE POLICY "Usuários criam medições na própria empresa"
   ON project_measurements FOR INSERT
   WITH CHECK (
@@ -478,6 +496,7 @@ CREATE POLICY "Usuários criam medições na própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários editam medições da própria empresa" ON project_measurements;
 CREATE POLICY "Usuários editam medições da própria empresa"
   ON project_measurements FOR UPDATE
   USING (
@@ -496,7 +515,7 @@ COMMENT ON TABLE project_measurements IS 'Medições de avanço físico-financei
 CREATE OR REPLACE FUNCTION calcular_progresso_projeto(p_project_id UUID)
 RETURNS NUMERIC
 LANGUAGE plpgsql
-AS $
+AS $$
 DECLARE
   v_progresso NUMERIC;
 BEGIN
@@ -508,13 +527,13 @@ BEGIN
 
   RETURN v_progresso;
 END;
-$;
+$$;
 
 -- Trigger para atualizar progresso do projeto quando tarefa muda
 CREATE OR REPLACE FUNCTION atualizar_progresso_projeto()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-AS $
+AS $$
 BEGIN
   UPDATE projects
   SET progresso_percentual = calcular_progresso_projeto(NEW.project_id),
@@ -523,7 +542,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$;
+$$;
 
 DROP TRIGGER IF EXISTS trigger_atualizar_progresso_projeto ON tasks;
 CREATE TRIGGER trigger_atualizar_progresso_projeto
@@ -551,6 +570,7 @@ CREATE INDEX IF NOT EXISTS idx_categorias_financeiras_empresa ON categorias_fina
 ALTER TABLE categorias_financeiras ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Usuários veem categorias da própria empresa" ON categorias_financeiras;
+DROP POLICY IF EXISTS "Usuários veem categorias da própria empresa" ON categorias_financeiras;
 CREATE POLICY "Usuários veem categorias da própria empresa"
   ON categorias_financeiras FOR SELECT
   USING (
@@ -559,6 +579,7 @@ CREATE POLICY "Usuários veem categorias da própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários criam categorias na própria empresa" ON categorias_financeiras;
 DROP POLICY IF EXISTS "Usuários criam categorias na própria empresa" ON categorias_financeiras;
 CREATE POLICY "Usuários criam categorias na própria empresa"
   ON categorias_financeiras FOR INSERT
@@ -586,6 +607,7 @@ CREATE INDEX IF NOT EXISTS idx_contas_bancarias_empresa ON contas_bancarias(empr
 ALTER TABLE contas_bancarias ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Usuários veem contas da própria empresa" ON contas_bancarias;
+DROP POLICY IF EXISTS "Usuários veem contas da própria empresa" ON contas_bancarias;
 CREATE POLICY "Usuários veem contas da própria empresa"
   ON contas_bancarias FOR SELECT
   USING (
@@ -594,6 +616,7 @@ CREATE POLICY "Usuários veem contas da própria empresa"
     )
   );
 
+DROP POLICY IF EXISTS "Usuários criam contas na própria empresa" ON contas_bancarias;
 DROP POLICY IF EXISTS "Usuários criam contas na própria empresa" ON contas_bancarias;
 CREATE POLICY "Usuários criam contas na própria empresa"
   ON contas_bancarias FOR INSERT

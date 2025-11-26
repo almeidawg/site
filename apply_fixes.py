@@ -1,67 +1,53 @@
 #!/usr/bin/env python3
-"""Script para aplicar correções no banco Supabase"""
+"""
+Script para corrigir migration: adicionar IF NOT EXISTS em CREATE INDEX
+"""
 
-import psycopg2
-import sys
+from pathlib import Path
 
-# Configurações de conexão
-DB_CONFIG = {
-    'host': 'db.ahlqzzkxuutwoepirpzr.supabase.co',
-    'port': 5432,
-    'database': 'postgres',
-    'user': 'postgres',
-    'password': 'WG@2025supabase',
-    'sslmode': 'require'
-}
+MIGRATION_FILE = "Supabase/supabase/migrations/20251124000000_criar_modulo_cronograma.sql"
 
-def main():
-    print("Conectando ao Supabase...")
+def fix_migration():
+    """Adiciona IF NOT EXISTS em todos CREATE INDEX"""
 
+    print("Corrigindo migration...")
+
+    migration_path = Path(MIGRATION_FILE)
+    if not migration_path.exists():
+        print(f"[ERRO] Arquivo nao encontrado: {MIGRATION_FILE}")
+        return False
+
+    with open(migration_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # Substituir CREATE INDEX por CREATE INDEX IF NOT EXISTS
+    # Mas apenas se ainda nao tiver IF NOT EXISTS
+    lines = content.split("\n")
+    fixed_lines = []
+
+    for line in lines:
+        if line.strip().startswith("CREATE INDEX ") and "IF NOT EXISTS" not in line:
+            # Adicionar IF NOT EXISTS
+            line = line.replace("CREATE INDEX ", "CREATE INDEX IF NOT EXISTS ")
+            print(f"[FIX] {line.strip()[:80]}...")
+        fixed_lines.append(line)
+
+    fixed_content = "\n".join(fixed_lines)
+
+    # Salvar
+    with open(migration_path, "w", encoding="utf-8") as f:
+        f.write(fixed_content)
+
+    print(f"\n[OK] Migration corrigida!")
+    print(f"[OK] Total de linhas: {len(fixed_lines)}")
+
+    return True
+
+if __name__ == "__main__":
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-
-        print("Lendo arquivo SQL...")
-        with open('fix_supabase_schema.sql', 'r', encoding='utf-8') as f:
-            sql = f.read()
-
-        print("Executando SQL...")
-        cur.execute(sql)
-        conn.commit()
-
-        print("\n✅ SQL executado com sucesso!")
-
-        # Verificar resultado
-        print("\nVerificando estruturas criadas:")
-        cur.execute("""
-            SELECT
-              'Tabela' as tipo,
-              table_name as nome
-            FROM information_schema.tables
-            WHERE table_schema = 'public'
-            AND table_name IN ('usuarios_perfis', 'user_profiles', 'propostas', 'storage_items', 'kanban_cards', 'kanban_colunas')
-            UNION ALL
-            SELECT
-              'View' as tipo,
-              table_name as nome
-            FROM information_schema.views
-            WHERE table_schema = 'public'
-            AND table_name IN ('v_kanban_cards_board', 'v_clientes_ativos_contratos')
-            ORDER BY tipo, nome;
-        """)
-
-        results = cur.fetchall()
-        for row in results:
-            print(f"  {row[0]}: {row[1]}")
-
-        cur.close()
-        conn.close()
-
-        print("\n✅ Todas as correções aplicadas com sucesso!")
-
+        success = fix_migration()
+        exit(0 if success else 1)
     except Exception as e:
-        print(f"\n❌ Erro: {e}")
-        sys.exit(1)
+        print(f"[ERRO]: {str(e)}")
+        exit(1)
 
-if __name__ == '__main__':
-    main()
