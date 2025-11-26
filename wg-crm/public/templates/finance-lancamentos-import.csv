@@ -1,0 +1,3 @@
+tipo,categoria,centro_custo,descricao,valor,data_emissao,data_vencimento,conta_financeira,documento,observacoes
+receber,Serviços,Engenharia,Receita de projeto,15000,2025-11-01,2025-12-01,Conta Corrente,INV-0001,Contrato #CTR-1001
+pagar,Fornecedores,Marcenaria,Compra de materiais,4500,2025-11-05,2025-11-20,Conta Poupança,PO-3456,Compra aprovada

@@ -1,0 +1,3 @@
+cliente_id,descricao,valor,vencimento,categoria,status,observacoes
+cliente-123,Pagamentos de equipe,2500,2025-12-10,Equipe,Pendente,Prestador XYZ
+cliente-456,Consultoria externa,3200,2025-11-15,Consultoria,Aprovado,Contrato 2025
