@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Briefcase, Building, CreditCard, Ship, UserCheck, 
-    ChevronRight, Info, Construction, FileSignature, 
+    Briefcase, Building, CreditCard, Ship, UserCheck,
+    ChevronRight, Info, Construction, FileSignature,
     Star, Users, Shield, TrendingUp, BookOpen, Banknote, List, Building2,
-    Loader2, Search, Save, Upload, Plus, Trash, Package, Edit
+    Loader2, Search, Save, Upload, Plus, Trash, Package, Edit, ArrowDown
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import GerenciarModelosContrato from '@/components/contratos/GerenciarModelosContrato';
@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useBancos } from '../../hooks/useBancos';
 import { useFeriados } from '../../hooks/useFeriados';
 import { useEspecificadores } from '../../hooks/useEspecificadores';
+import { parseCsvFile, validateCsvColumns } from '@/lib/csvImporter';
 
 const PlaceholderContent = ({ title, icon: Icon }) => {
     const { toast } = useToast();
@@ -114,6 +115,92 @@ const SimpleListManager = ({ title, table, placeholder, column = 'nome' }) => {
                             <Trash className="h-4 w-4 text-red-500"/>
                         </Button>
                     </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const IMPORT_TEMPLATES = {
+    pessoas: {
+        title: 'Pessoas',
+        template: '/templates/pessoas-import.csv',
+        description: 'Importe clientes, colaboradores, fornecedores ou especificadores com CPF/CNPJ.',
+        columns: [
+            'tipo', 'nome_razao_social', 'cpf_cnpj', 'email', 'telefone',
+            'endereco', 'cidade', 'estado', 'categoria', 'ativo'
+        ],
+    },
+    lancamentos: {
+        title: 'Lançamentos Financeiros',
+        template: '/templates/finance-lancamentos-import.csv',
+        description: 'Importe receitas/despesas com categoria, centro de custo e vencimento.',
+        columns: [
+            'tipo', 'categoria', 'centro_custo', 'descricao', 'valor',
+            'data_emissao', 'data_vencimento', 'conta_financeira', 'documento', 'observacoes'
+        ],
+    },
+    solicitacoes: {
+        title: 'Solicitações de Pagamento',
+        template: '/templates/finance-solicitacoes-import.csv',
+        description: 'Importe solicitações com cliente, categoria e datas previstas.',
+        columns: [
+            'cliente_id', 'descricao', 'valor', 'vencimento', 'categoria', 'status', 'observacoes'
+        ],
+    },
+};
+
+const ImportModulePanel = ({ moduleKey }) => {
+    const template = IMPORT_TEMPLATES[moduleKey];
+    const { toast } = useToast();
+    const inputRef = React.useRef(null);
+
+    const handleImport = useCallback(
+        async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            event.target.value = '';
+            const { columns, rows } = await parseCsvFile(file);
+            const missing = validateCsvColumns(columns, template.columns);
+            if (missing.length) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Cabeçalho inválido',
+                    description: `Faltam colunas: ${missing.join(', ')}`,
+                });
+                return;
+            }
+            toast({
+                title: 'Importação validada',
+                description: `${rows.length} linhas prontas para ${template.title}.`,
+            });
+        },
+        [template, toast]
+    );
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-xl font-bold">{template.title}</h3>
+                    <p className="text-sm text-slate-500">{template.description}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <a href={template.template} download className="text-sm text-slate-600 hover:text-primary flex items-center gap-1">
+                        <ArrowDown size={14} />
+                        Modelo CSV
+                    </a>
+                    <Button size="sm" variant="outline" onClick={() => inputRef.current?.click()}>
+                        Importar CSV
+                    </Button>
+                    <input ref={inputRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
+                </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] uppercase tracking-wide">
+                {template.columns.map((column) => (
+                    <span key={column} className="px-2 py-1 bg-slate-100 rounded-full text-center">
+                        {column}
+                    </span>
                 ))}
             </div>
         </div>
@@ -256,22 +343,32 @@ const PricelistManager = () => {
             </AnimatePresence>
             
             <div className="space-y-2">
-                {loading ? <Loader2 className="animate-spin" /> : produtos.map(p => (
-                    <div key={p.id} className="flex justify-between items-center p-3 bg-white/80 rounded-lg">
-                        <div className="flex items-center gap-4">
-                            {p.imagem_url && <img src={p.imagem_url} alt={p.nome} className="w-16 h-16 object-cover rounded-md" />}
-                            <div>
-                                <p className="font-semibold">{p.nome} <span className="text-xs text-muted-foreground font-normal">({p.unidade})</span></p>
-                                <p className="text-sm">Custo: {parseFloat(p.valor_unitario).toLocaleString('pt-BR', {style:'currency', currency: 'BRL'})}</p>
-                                <p className="text-sm font-bold text-primary">Venda: {parseFloat(p.valor_venda).toLocaleString('pt-BR', {style:'currency', currency: 'BRL'})}</p>
+                {loading ? <Loader2 className="animate-spin" /> : produtos.map(p => {
+                    // CALCULAR VALOR DE VENDA DINAMICAMENTE
+                    const valorCusto = parseFloat(p.valor_unitario) || 0;
+                    const markupPercent = parseFloat(p.markup_percent) || 0;
+                    const valorVenda = valorCusto * (1 + markupPercent / 100);
+
+                    return (
+                        <div key={p.id} className="flex justify-between items-center p-3 bg-white/80 rounded-lg">
+                            <div className="flex items-center gap-4">
+                                {p.imagem_url && <img src={p.imagem_url} alt={p.nome} className="w-16 h-16 object-cover rounded-md" />}
+                                <div>
+                                    <p className="font-semibold">{p.nome} <span className="text-xs text-muted-foreground font-normal">({p.unidade})</span></p>
+                                    <p className="text-sm">Custo: {valorCusto.toLocaleString('pt-BR', {style:'currency', currency: 'BRL'})}</p>
+                                    <p className="text-sm font-bold text-primary">Venda: {valorVenda.toLocaleString('pt-BR', {style:'currency', currency: 'BRL'})}</p>
+                                    {markupPercent > 0 && (
+                                        <p className="text-xs text-muted-foreground">Markup: {markupPercent}%</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => setProdutoToEdit(p)}><Edit className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}><Trash className="h-4 w-4 text-red-500" /></Button>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                             <Button variant="ghost" size="icon" onClick={() => setProdutoToEdit(p)}><Edit className="h-4 w-4" /></Button>
-                             <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}><Trash className="h-4 w-4 text-red-500" /></Button>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );
@@ -531,6 +628,15 @@ const Configuracoes = () => {
                 'Contas e Bancos': { icon: CreditCard, component: <BancosManager /> },
                 'Plano de Contas': { icon: BookOpen, component: <PlaceholderContent title="Plano de Contas" icon={BookOpen} /> },
                 'Categorias': { icon: List, component: <SimpleListManager title="Categorias Financeiras" table="categorias_fin" placeholder="Ex: Material de Obra" /> },
+            }
+        },
+        importacoes: {
+            label: 'Importações',
+            icon: Upload,
+            submenus: {
+                'Pessoas': { icon: Users, component: <ImportModulePanel moduleKey="pessoas" /> },
+                'Lançamentos': { icon: FileSignature, component: <ImportModulePanel moduleKey="lancamentos" /> },
+                'Solicitações': { icon: List, component: <ImportModulePanel moduleKey="solicitacoes" /> },
             }
         },
         logistica: {
